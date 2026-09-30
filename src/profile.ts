@@ -30,7 +30,7 @@ export const profile = {
   lookingFor: "Open to software engineering & fintech internships",
   email: "varunsharma42006@gmail.com",
   github: "https://github.com/varun-sharma-2006",
-  linkedin: "https://www.linkedin.com/in/varun-sharma-0089321b5",
+  linkedin: "https://www.linkedin.com/in/varunsh0040",
   resume: "/resume.pdf",
 
   headline: "I build products that ship, end to end.",
