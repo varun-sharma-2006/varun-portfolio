@@ -26,13 +26,11 @@ export interface Shot {
 export const profile = {
   name: "Varun Sharma",
   role: "Full-stack developer",
-  // TODO: add your city, e.g. "Delhi, India"
-  location: "",
+  location: "Greater Noida, India",
   lookingFor: "Open to software engineering & fintech internships",
   email: "varunsharma42006@gmail.com",
   github: "https://github.com/varun-sharma-2006",
-  // TODO: paste your LinkedIn profile URL, e.g. "https://www.linkedin.com/in/your-name"
-  linkedin: "",
+  linkedin: "https://www.linkedin.com/in/varun-sharma-0089321b5",
   // TODO: put your resume at public/resume.pdf and set this to "/resume.pdf"
   resume: "",
 
@@ -48,18 +46,27 @@ export const profile = {
   ],
 
   skills: [
-    { group: "Languages", items: ["Python", "TypeScript", "JavaScript"] },
+    { group: "Languages", items: ["Python", "C++", "TypeScript", "JavaScript"] },
     { group: "Backend", items: ["FastAPI", "REST APIs", "MongoDB", "Pydantic"] },
     { group: "Frontend", items: ["React", "Vite", "CSS & design systems", "Responsive UI"] },
-    { group: "AI & quant", items: ["Gemini function calling", "Machine learning", "Backtesting", "Risk analytics", "Walk-forward testing"] },
+    { group: "AI & ML", items: ["Machine learning", "Scikit-learn", "Pandas", "NumPy", "Gemini function calling"] },
+    { group: "Quant", items: ["Backtesting", "Risk analytics", "Walk-forward testing", "Time-series analysis"] },
     { group: "Engineering", items: ["pytest & Vitest", "GitHub Actions CI", "Vercel", "Docker", "Google OAuth"] },
   ],
 
-  // TODO: add your education, e.g.
-  // { title: "B.Tech, Computer Science", place: "Your University", period: "2023 – 2027", details: "CGPA 8.9" }
-  education: [] as TimelineItem[],
-  // Optional: internships, hackathons, leadership.
-  experience: [] as TimelineItem[],
+  education: [
+    {
+      title: "B.Tech, Computer Science & Engineering (Artificial Intelligence)",
+      place: "Bennett University, Greater Noida",
+      period: "Class of 2028",
+      details: "Coursework: Data Structures & Algorithms, Artificial Intelligence, Machine Learning, Linear Algebra, OOP",
+    },
+  ] as TimelineItem[],
+  // Internships, hackathons, leadership.
+  experience: [
+    { title: "Management Lead", place: "Sportikon 3.0", period: "2025" },
+    { title: "Peer Mentor", place: "DSA Summit", period: "2025" },
+  ] as TimelineItem[],
 };
 
 /** The featured case study. */
