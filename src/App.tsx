@@ -391,7 +391,7 @@ function About() {
   const shown = otherProjects.filter((p) => p.show);
   return (
     <section id="about" className="section">
-      <SectionHead eyebrow="About me" title="The developer behind it" />
+      <SectionHead eyebrow="About me" title="A bit about me" />
       <div className="about">
         <Spotlight className="about-card">
           <div className="about-top">
