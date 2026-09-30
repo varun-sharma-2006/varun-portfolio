@@ -544,6 +544,35 @@ main {
   animation-delay: -3s;
 }
 
+.float-c {
+  right: 8%;
+  bottom: -1.5rem;
+  animation-delay: -1.5s;
+}
+
+.team {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.team a {
+  color: var(--text);
+  background: linear-gradient(var(--cyan), var(--cyan)) 0 100% / 100% 1px no-repeat;
+  padding-bottom: 1px;
+  transition: color 0.2s ease;
+}
+
+.team a:hover {
+  color: #aef2fb;
+}
+
+.team em {
+  font-style: normal;
+  margin: 0 0.4rem;
+  color: var(--faint);
+}
+
 .float-b strong {
   font-size: 1.5rem;
 }

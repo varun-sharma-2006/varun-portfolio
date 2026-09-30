@@ -203,6 +203,10 @@ function Hero() {
           <span className="mono">Backtest vs buy &amp; hold</span>
           <strong>Honest by design</strong>
         </div>
+        <div className="float float-c">
+          <span className="mono">Built with</span>
+          <strong>Yashika Garg</strong>
+        </div>
         <div className="float float-b">
           <span className="mono">Tests passing</span>
           <strong className="grad">86 / 86</strong>
@@ -256,7 +260,20 @@ function CaseStudy() {
           <p>{caseStudy.summary}</p>
           <dl>
             <div>
-              <dt>Role</dt>
+              <dt>Team</dt>
+              <dd className="team">
+                {caseStudy.team.map((member, i) => (
+                  <span key={member.name}>
+                    <a href={member.href} target="_blank" rel="noreferrer">
+                      {member.name}
+                    </a>
+                    {i < caseStudy.team.length - 1 ? <em>&amp;</em> : null}
+                  </span>
+                ))}
+              </dd>
+            </div>
+            <div>
+              <dt>What we built</dt>
               <dd>{caseStudy.role}</dd>
             </div>
             <div>

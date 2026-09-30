@@ -74,7 +74,11 @@ export const caseStudy = {
     { label: "View source", href: "https://github.com/varun-sharma-2006/AlgoTrade" },
   ] satisfies Link[],
   heroImage: "/algotrade/portfolio.png",
-  role: "Solo · design, backend, frontend, deployment",
+  role: "Design, backend, frontend and deployment",
+  team: [
+    { name: "Varun Sharma", href: "https://github.com/varun-sharma-2006" },
+    { name: "Yashika Garg", href: "https://github.com/yashikagarg16" },
+  ],
   stack: ["Python", "FastAPI", "React", "TypeScript", "MongoDB Atlas", "Google Gemini", "Vercel", "GitHub Actions"],
 
   stats: [
@@ -89,14 +93,14 @@ export const caseStudy = {
       kicker: "The problem",
       title: "Most backtests flatter the strategy",
       body:
-        "My first version reported a strategy's return as the stock's buy-and-hold return and used a hard-coded win " +
+        "Our first version reported a strategy's return as the stock's buy-and-hold return and used a hard-coded win " +
         "rate. It looked great and meant nothing. Many 'profitable' strategies online make the same mistakes.",
     },
     {
       kicker: "The approach",
       title: "Simulate every trade honestly",
       body:
-        "I rebuilt the engine to decide positions at each day's close using only past data, hold them from the next " +
+        "We rebuilt the engine to decide positions at each day's close using only past data, hold them from the next " +
         "day, charge a fee on every entry and exit, and always report the result next to buy & hold.",
     },
     {
