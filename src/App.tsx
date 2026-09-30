@@ -1,131 +1,143 @@
 import { useEffect, useState } from "react";
 import { profile, type Project, type TimelineItem } from "./profile";
 
-const initials = profile.name
-  .split(" ")
-  .map((part) => part[0])
-  .join("")
-  .slice(0, 2);
+const [firstName, ...rest] = profile.name.split(" ");
+const lastName = rest.join(" ");
 
-function Monogram({ size = 44 }: { size?: number }) {
+function Arrow({ className = "" }: { className?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true">
-      <defs>
-        <linearGradient id="mono-gold" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#f6dfa8" />
-          <stop offset="55%" stopColor="#d4af6a" />
-          <stop offset="100%" stopColor="#9c7535" />
-        </linearGradient>
-      </defs>
-      <rect x="1.5" y="1.5" width="45" height="45" rx="13" fill="#0d0f16" stroke="url(#mono-gold)" strokeWidth="1.5" />
-      <text x="24" y="31" textAnchor="middle" fontFamily="Playfair Display Variable, Georgia, serif" fontSize="19" fontWeight="600" fill="url(#mono-gold)">
+    <svg className={`arrow ${className}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M7 17 17 7M8 7h9v9" />
+    </svg>
+  );
+}
+
+function Seal({ size = 40 }: { size?: number }) {
+  const initials = profile.name
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2);
+  return (
+    <svg className="seal" width={size} height={size} viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="24" cy="24" r="22.5" fill="none" stroke="currentColor" strokeWidth="1" />
+      <circle cx="24" cy="24" r="19" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.5" />
+      <text x="24" y="29.5" textAnchor="middle" fontFamily="Fraunces Variable, Georgia, serif" fontStyle="italic" fontSize="15" fill="currentColor">
         {initials}
       </text>
     </svg>
   );
 }
 
-function ArrowIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M7 17 17 7M8 7h9v9" />
-    </svg>
-  );
-}
-
-const NAV = [
-  { id: "work", label: "Work" },
-  { id: "about", label: "About" },
-  { id: "skills", label: "Skills" },
-  { id: "contact", label: "Contact" },
-];
-
 function useReveal() {
   useEffect(() => {
     const items = document.querySelectorAll<HTMLElement>("[data-reveal]");
     if (!("IntersectionObserver" in window)) {
-      items.forEach((el) => el.classList.add("revealed"));
+      items.forEach((el) => el.classList.add("in"));
       return;
     }
     const observer = new IntersectionObserver(
       (entries) =>
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add("revealed");
+            entry.target.classList.add("in");
             observer.unobserve(entry.target);
           }
         }),
-      { threshold: 0.12 },
+      { threshold: 0.1 },
     );
     items.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
 }
 
-function ExternalLink({ link, primary }: { link: { label: string; href: string }; primary?: boolean }) {
+function useLocalTime() {
+  const [time, setTime] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setTime(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  return time.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+}
+
+function SectionLabel({ index, children }: { index: string; children: string }) {
   return (
-    <a className={primary ? "btn btn-gold" : "btn btn-ghost"} href={link.href} target="_blank" rel="noreferrer">
-      {link.label}
-      <ArrowIcon />
-    </a>
+    <div className="section-label" data-reveal>
+      <span className="index">({index})</span>
+      <span>{children}</span>
+      <i />
+    </div>
   );
 }
 
-function FeaturedProject({ project }: { project: Project }) {
+function ProjectLinks({ project }: { project: Project }) {
+  return (
+    <div className="project-links">
+      {project.links.map((link) => (
+        <a key={link.href} href={link.href} target="_blank" rel="noreferrer" className="text-link">
+          {link.label}
+          <Arrow />
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function Featured({ project }: { project: Project }) {
   return (
     <article className="featured" data-reveal>
-      <div className="featured-copy">
-        <span className="eyebrow">Featured project</span>
+      <div className="featured-meta">
+        <span className="index">01</span>
+        <span className="kicker">Featured</span>
+      </div>
+      <div className="featured-body">
         <h3>{project.name}</h3>
-        <p className="tagline">{project.tagline}</p>
-        <p>{project.description}</p>
-        <ul className="highlights">
-          {project.highlights.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-        <div className="tags">
-          {project.tech.map((t) => (
-            <span key={t}>{t}</span>
-          ))}
+        <p className="lede">{project.tagline}.</p>
+        {project.image ? (
+          <a className="plate" href={project.links[0]?.href} target="_blank" rel="noreferrer" aria-label={`Open ${project.name}`}>
+            <img src={project.image} alt={`${project.name} interface`} loading="lazy" />
+            <span className="plate-caption">
+              Fig. 1 — Portfolio view, live on real market data <Arrow />
+            </span>
+          </a>
+        ) : null}
+        <div className="featured-columns">
+          <p className="body">{project.description}</p>
+          <ul className="points">
+            {project.highlights.map((h) => (
+              <li key={h}>{h}</li>
+            ))}
+          </ul>
         </div>
-        <div className="actions">
-          {project.links.map((link, i) => (
-            <ExternalLink key={link.href} link={link} primary={i === 0} />
-          ))}
+        <div className="featured-foot">
+          <p className="stack">{project.tech.join(" · ")}</p>
+          <ProjectLinks project={project} />
         </div>
       </div>
-      {project.image ? (
-        <a className="featured-shot" href={project.links[0]?.href} target="_blank" rel="noreferrer" aria-label={`Open ${project.name}`}>
-          <img src={project.image} alt={`${project.name} screenshot`} loading="lazy" />
-        </a>
-      ) : null}
     </article>
   );
 }
 
-function ProjectCard({ project, index }: { project: Project; index: number }) {
+function ProjectRow({ project, index }: { project: Project; index: number }) {
   return (
-    <article className="card project-card" data-reveal style={{ transitionDelay: `${index * 80}ms` }}>
-      <span className="number">{String(index + 2).padStart(2, "0")}</span>
-      <h3>{project.name}</h3>
-      <p className="tagline">{project.tagline}</p>
-      <p>{project.description}</p>
-      <ul className="highlights small">
-        {project.highlights.map((item) => (
-          <li key={item}>{item}</li>
-        ))}
-      </ul>
-      {project.note ? <p className="note">{project.note}</p> : null}
-      <div className="tags">
-        {project.tech.map((t) => (
-          <span key={t}>{t}</span>
-        ))}
+    <article className="row" data-reveal>
+      <span className="index">{String(index + 2).padStart(2, "0")}</span>
+      <div className="row-title">
+        <h3>{project.name}</h3>
+        <p className="lede">{project.tagline}</p>
+        {project.note ? <p className="note">{project.note}</p> : null}
       </div>
-      <div className="actions">
-        {project.links.map((link) => (
-          <ExternalLink key={link.href} link={link} />
-        ))}
+      <div className="row-detail">
+        <p className="body">{project.description}</p>
+        <ul className="points small">
+          {project.highlights.map((h) => (
+            <li key={h}>{h}</li>
+          ))}
+        </ul>
+      </div>
+      <div className="row-side">
+        <p className="stack">{project.tech.join(" · ")}</p>
+        <ProjectLinks project={project} />
       </div>
     </article>
   );
@@ -135,29 +147,32 @@ function Timeline({ title, items }: { title: string; items: TimelineItem[] }) {
   if (!items.length) return null;
   return (
     <div className="timeline" data-reveal>
-      <h3>{title}</h3>
-      <ol>
-        {items.map((item) => (
-          <li key={`${item.title}-${item.place}`}>
-            <span className="period">{item.period}</span>
+      <h4>{title}</h4>
+      {items.map((item) => (
+        <div className="timeline-item" key={`${item.title}-${item.place}`}>
+          <span className="period">{item.period}</span>
+          <div>
             <strong>{item.title}</strong>
             <span className="place">{item.place}</span>
             {item.details ? <p>{item.details}</p> : null}
-          </li>
-        ))}
-      </ol>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
 export default function App() {
   useReveal();
+  const time = useLocalTime();
   const [copied, setCopied] = useState(false);
   const [featured, ...others] = profile.projects;
-  const contactLinks = [
+  const allSkills = profile.skills.flatMap((g) => g.items);
+  const hasTimeline = profile.education.length > 0 || profile.experience.length > 0;
+  const links = [
     profile.github && { label: "GitHub", href: profile.github },
     profile.linkedin && { label: "LinkedIn", href: profile.linkedin },
-    profile.resume && { label: "Resume", href: profile.resume },
+    profile.resume && { label: "Résumé", href: profile.resume },
   ].filter(Boolean) as Array<{ label: string; href: string }>;
 
   const copyEmail = async () => {
@@ -171,79 +186,113 @@ export default function App() {
   };
 
   return (
-    <>
-      <header className="topbar">
-        <a className="brand" href="#top">
-          <Monogram size={38} />
+    <div className="page">
+      <header className="masthead">
+        <a href="#top" className="wordmark">
+          <Seal size={34} />
           <span>{profile.name}</span>
         </a>
         <nav>
-          {NAV.map((item) => (
-            <a key={item.id} href={`#${item.id}`}>
-              {item.label}
-            </a>
-          ))}
+          <a href="#work">Work</a>
+          <a href="#about">About</a>
+          <a href="#skills">Skills</a>
+          <a href="#contact" className="nav-cta">
+            Contact
+          </a>
         </nav>
       </header>
 
       <main id="top">
         <section className="hero">
-          <div className="hero-copy" data-reveal>
-            {profile.lookingFor ? (
-              <span className="status">
-                <i />
-                {profile.lookingFor}
+          <p className="hero-kicker" data-reveal>
+            <span>Portfolio</span>
+            <span>Vol. {new Date().getFullYear()}</span>
+          </p>
+          <h1 data-reveal>
+            <span className="line">{firstName}</span>
+            <span className="line indent">
+              <em>{lastName}</em>
+              <span className="asterisk" aria-hidden="true">
+                ✳
               </span>
-            ) : null}
-            <h1>
-              {profile.name.split(" ")[0]} <em>{profile.name.split(" ").slice(1).join(" ")}</em>
-            </h1>
-            <p className="role">
-              {profile.role}
-              {profile.location ? ` · ${profile.location}` : ""}
-            </p>
-            <p className="headline">{profile.headline}</p>
+            </span>
+          </h1>
+          <div className="hero-grid" data-reveal>
+            <p className="statement">{profile.headline}</p>
+            <dl className="facts">
+              <div>
+                <dt>Discipline</dt>
+                <dd>{profile.role}</dd>
+              </div>
+              {profile.location ? (
+                <div>
+                  <dt>Based in</dt>
+                  <dd>{profile.location}</dd>
+                </div>
+              ) : null}
+              <div>
+                <dt>Local time</dt>
+                <dd>{time}</dd>
+              </div>
+              {profile.lookingFor ? (
+                <div>
+                  <dt>Status</dt>
+                  <dd className="available">
+                    <i />
+                    {profile.lookingFor}
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
+          </div>
+          <div className="hero-foot" data-reveal>
             <p className="intro">{profile.intro}</p>
-            <div className="actions">
-              <a className="btn btn-gold" href="#work">
-                See my work
+            <div className="hero-actions">
+              <a href="#work" className="pill pill-dark">
+                View selected work
+                <Arrow />
               </a>
-              <a className="btn btn-ghost" href="#contact">
-                Get in touch
+              <a href={`mailto:${profile.email}`} className="pill pill-line">
+                Say hello
               </a>
             </div>
           </div>
-          <div className="hero-art" aria-hidden="true">
-            <div className="orb" />
-            <Monogram size={132} />
-          </div>
         </section>
 
-        <section id="work" className="section">
-          <div className="section-head" data-reveal>
-            <span className="eyebrow">Selected work</span>
-            <h2>Projects</h2>
+        <div className="ticker" aria-hidden="true">
+          <div className="ticker-track">
+            {[...allSkills, ...allSkills].map((skill, i) => (
+              <span key={`${skill}-${i}`}>
+                {skill}
+                <b>✳</b>
+              </span>
+            ))}
           </div>
-          {featured ? <FeaturedProject project={featured} /> : null}
-          <div className="project-grid">
-            {others.map((project, index) => (
-              <ProjectCard key={project.name} project={project} index={index} />
+        </div>
+
+        <section id="work" className="section">
+          <SectionLabel index="01">Selected work</SectionLabel>
+          <h2 className="section-title" data-reveal>
+            Things I've <em>built</em>
+          </h2>
+          {featured ? <Featured project={featured} /> : null}
+          <div className="rows">
+            {others.map((project, i) => (
+              <ProjectRow key={project.name} project={project} index={i} />
             ))}
           </div>
         </section>
 
-        <section id="about" className="section about">
-          <div className="section-head" data-reveal>
-            <span className="eyebrow">About</span>
-            <h2>A little about me</h2>
-          </div>
-          <div className={profile.education.length || profile.experience.length ? "about-grid" : "about-grid single"}>
-            <div className="about-copy" data-reveal>
-              {profile.about.map((paragraph) => (
-                <p key={paragraph.slice(0, 24)}>{paragraph}</p>
-              ))}
-            </div>
+        <section id="about" className="section">
+          <SectionLabel index="02">About</SectionLabel>
+          <div className={hasTimeline ? "about" : "about solo"}>
+            <blockquote data-reveal>“{profile.about[0]}”</blockquote>
             <div className="about-side">
+              {profile.about.slice(1).map((p) => (
+                <p key={p.slice(0, 20)} className="body" data-reveal>
+                  {p}
+                </p>
+              ))}
               <Timeline title="Education" items={profile.education} />
               <Timeline title="Experience" items={profile.experience} />
             </div>
@@ -251,50 +300,57 @@ export default function App() {
         </section>
 
         <section id="skills" className="section">
-          <div className="section-head" data-reveal>
-            <span className="eyebrow">Toolkit</span>
-            <h2>Skills</h2>
-          </div>
-          <div className="skills-grid">
-            {profile.skills.map((group) => (
-              <div className="card skill-card" key={group.group} data-reveal>
-                <h3>{group.group}</h3>
-                <div className="tags">
+          <SectionLabel index="03">Capabilities</SectionLabel>
+          <div className="skills">
+            {profile.skills.map((group, i) => (
+              <div className="skill" key={group.group} data-reveal>
+                <span className="index">{String(i + 1).padStart(2, "0")}</span>
+                <h4>{group.group}</h4>
+                <ul>
                   {group.items.map((item) => (
-                    <span key={item}>{item}</span>
+                    <li key={item}>{item}</li>
                   ))}
-                </div>
+                </ul>
               </div>
             ))}
           </div>
         </section>
 
-        <section id="contact" className="section contact" data-reveal>
-          <span className="eyebrow">Contact</span>
-          <h2>
-            Let's build something <em>together</em>.
+        <section id="contact" className="contact">
+          <SectionLabel index="04">Contact</SectionLabel>
+          <h2 data-reveal>
+            Let's <em>talk.</em>
           </h2>
-          <p>{profile.lookingFor ? `${profile.lookingFor}. ` : ""}The fastest way to reach me is email.</p>
-          <div className="actions center">
-            <a className="btn btn-gold" href={`mailto:${profile.email}`}>
-              {profile.email}
-            </a>
-            <button type="button" className="btn btn-ghost" onClick={() => void copyEmail()}>
-              {copied ? "Copied ✓" : "Copy email"}
+          <p className="body" data-reveal>
+            {profile.lookingFor ? `${profile.lookingFor}. ` : ""}Email is the fastest way to reach me, and I reply to
+            everything.
+          </p>
+          <div className="contact-email" data-reveal>
+            <a href={`mailto:${profile.email}`}>{profile.email}</a>
+            <button type="button" onClick={() => void copyEmail()}>
+              {copied ? "Copied" : "Copy"}
             </button>
-            {contactLinks.map((link) => (
-              <ExternalLink key={link.href} link={link} />
-            ))}
           </div>
+          {links.length ? (
+            <div className="contact-links" data-reveal>
+              {links.map((link) => (
+                <a key={link.href} href={link.href} target="_blank" rel="noreferrer" className="text-link">
+                  {link.label}
+                  <Arrow />
+                </a>
+              ))}
+            </div>
+          ) : null}
         </section>
       </main>
 
-      <footer className="footer">
+      <footer className="colophon">
         <span>
           © {new Date().getFullYear()} {profile.name}
         </span>
-        <span>Built with React &amp; TypeScript</span>
+        <span>Set in Fraunces &amp; Inter Tight</span>
+        <a href="#top">Back to top ↑</a>
       </footer>
-    </>
+    </div>
   );
 }
