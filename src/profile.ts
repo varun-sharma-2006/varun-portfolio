@@ -117,7 +117,7 @@ export const caseStudy = {
       title: "Numbers you can trust",
       body:
         "Sharpe, Sortino, drawdown and beta against buy & hold and the S&P 500. On AAPL, a tuned SMA strategy looked " +
-        "like +24% a year but made +10% on unseen data; the ML model is about as accurate as a coin flip. The app " +
+        "like +24% a year but made +11% on unseen data; the ML model is about as accurate as a coin flip. The app " +
         "shows exactly that.",
     },
   ],
