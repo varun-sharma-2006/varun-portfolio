@@ -51,7 +51,7 @@ export const profile = {
     { group: "Languages", items: ["Python", "TypeScript", "JavaScript"] },
     { group: "Backend", items: ["FastAPI", "REST APIs", "MongoDB", "Pydantic"] },
     { group: "Frontend", items: ["React", "Vite", "CSS & design systems", "Responsive UI"] },
-    { group: "AI & quant", items: ["Google Gemini API", "Backtesting", "Technical indicators"] },
+    { group: "AI & quant", items: ["Gemini function calling", "Machine learning", "Backtesting", "Risk analytics", "Walk-forward testing"] },
     { group: "Engineering", items: ["pytest & Vitest", "GitHub Actions CI", "Vercel", "Docker", "Google OAuth"] },
   ],
 
@@ -67,8 +67,10 @@ export const caseStudy = {
   name: "Algo Trade Simulator",
   tagline: "A trading lab that tells you the truth about your strategy.",
   summary:
-    "Backtest trading strategies on two years of real market data, design your own rules, run backdated paper " +
-    "portfolios, and ask an AI copilot about any stock. Every result is shown next to simply buying and holding.",
+    "Backtest trading strategies on real market data with fees and slippage, compare every result with buy & hold " +
+    "and the S&P 500 on return and risk, check whether tuned settings survive with walk-forward testing, try a " +
+    "machine-learning strategy trained only on the past, design your own rules, run backdated paper portfolios, " +
+    "and ask an AI copilot that runs all of it for you.",
   links: [
     { label: "Open live demo", href: "https://algo-trade-mu.vercel.app" },
     { label: "View source", href: "https://github.com/varun-sharma-2006/AlgoTrade" },
@@ -82,10 +84,10 @@ export const caseStudy = {
   stack: ["Python", "FastAPI", "React", "TypeScript", "MongoDB Atlas", "Google Gemini", "Vercel", "GitHub Actions"],
 
   stats: [
-    { value: 86, suffix: "", label: "Automated tests" },
-    { value: 4, suffix: "", label: "Built-in strategies + your own" },
-    { value: 2, suffix: " yrs", label: "Real daily market data" },
-    { value: 10, suffix: " bps", label: "Fee on every trade" },
+    { value: 107, suffix: "", label: "Automated tests" },
+    { value: 5, suffix: "", label: "Built-in strategies, incl. ML" },
+    { value: 7, suffix: "", label: "Risk metrics vs the S&P 500" },
+    { value: 15, suffix: " bps", label: "Fees + slippage per trade" },
   ],
 
   story: [
@@ -101,18 +103,44 @@ export const caseStudy = {
       title: "Simulate every trade honestly",
       body:
         "We rebuilt the engine to decide positions at each day's close using only past data, hold them from the next " +
-        "day, charge a fee on every entry and exit, and always report the result next to buy & hold.",
+        "day, and charge fees and slippage on every entry and exit. Walk-forward tests tune on one year and trade the " +
+        "next quarter, and the ML model is only ever trained on the past.",
     },
     {
       kicker: "The result",
       title: "Numbers you can trust",
       body:
-        "Real Sharpe ratio, drawdown, win rate, time in market and a full trade log. Often the honest answer is that " +
-        "the strategy lost to buy & hold, and the app shows exactly by how much.",
+        "Sharpe, Sortino, drawdown and beta against buy & hold and the S&P 500. On AAPL, a tuned SMA strategy looked " +
+        "like +24% a year but made +10% on unseen data; the ML model is about as accurate as a coin flip. The app " +
+        "shows exactly that.",
     },
   ],
 
   features: [
+    {
+      title: "Risk analytics",
+      body: "Return, volatility, Sharpe, Sortino, drawdown and Calmar for the strategy, buy & hold and the S&P 500 side by side, with growth and drawdown charts.",
+      image: "/algotrade/strategy-lab.png",
+      size: "wide",
+    },
+    {
+      title: "Walk-forward testing",
+      body: "Tune on each past year, trade the best settings on the next quarter they've never seen, and roll forward. The gap between tuned and out-of-sample returns is curve fitting, made visible.",
+      image: "/algotrade/walk-forward.png",
+      size: "tall",
+    },
+    {
+      title: "Machine-learning strategy",
+      body: "Logistic regression on 8 price features, retrained monthly on past data only, with accuracy vs a baseline, ROC-AUC and feature weights.",
+      image: "/algotrade/ml-strategy.png",
+      size: "normal",
+    },
+    {
+      title: "Copilot that runs backtests",
+      body: "Gemini function calling runs the real backtester, strategy comparisons and walk-forward tests, then explains the numbers.",
+      image: "/algotrade/copilot-actions.png",
+      size: "normal",
+    },
     {
       title: "Strategy Builder",
       body: "Combine price, SMA, EMA and RSI rules with crossovers, stop-loss and take-profit. Read it back in plain English, backtest, save.",
@@ -123,12 +151,6 @@ export const caseStudy = {
       title: "Paper portfolio",
       body: "Backdate simulations up to a year. Each is replayed on real prices with its strategy's rules to show live P&L.",
       image: "/algotrade/portfolio.png",
-      size: "tall",
-    },
-    {
-      title: "AI trading copilot",
-      body: "Gemini answers with live market data; a rule-based analyst takes over when the API is rate-limited.",
-      image: "/algotrade/chatbot.png",
       size: "normal",
     },
     {
@@ -145,29 +167,33 @@ export const caseStudy = {
     },
   ],
 
+  video: { src: "/algotrade/demo.mp4", poster: "/algotrade/demo-poster.png", length: "2 min" },
+
   gallery: [
     { id: "overview", label: "Overview", title: "Dashboard", caption: "Portfolio stats, watchlist sparklines and recent simulations at a glance.", image: "/algotrade/dashboard.png" },
+    { id: "lab", label: "Strategy lab", title: "Risk analytics", caption: "Growth and drawdown charts, and risk vs buy & hold and the S&P 500, fees and slippage included.", image: "/algotrade/strategy-lab.png" },
+    { id: "walk-forward", label: "Walk-forward", title: "Walk-forward test", caption: "Tuned vs out-of-sample returns, quarter by quarter, on data the settings never saw.", image: "/algotrade/walk-forward.png" },
+    { id: "ml", label: "ML model", title: "Machine-learning strategy", caption: "Out-of-sample accuracy vs an always-up baseline, ROC-AUC and what the model weighs.", image: "/algotrade/ml-strategy.png" },
     { id: "portfolio", label: "Portfolio", title: "Paper portfolio", caption: "Value over time, allocation, and every position's P&L against buy & hold.", image: "/algotrade/portfolio.png" },
     { id: "builder", label: "Builder", title: "Strategy Builder", caption: "Design rules, see them in plain English, backtest on 2 years of data and save.", image: "/algotrade/builder.png" },
-    { id: "lab", label: "Strategy lab", title: "Backtest results", caption: "Equity curve, Sharpe, drawdown, win rate and a trade log for built-in strategies.", image: "/algotrade/strategy-lab.png" },
-    { id: "copilot", label: "Copilot", title: "AI trading copilot", caption: "Ranks stocks by trend, momentum and RSI and explains why, with live numbers.", image: "/algotrade/chatbot.png" },
+    { id: "copilot", label: "Copilot", title: "AI copilot with actions", caption: "Ask it to compare strategies and it runs the backtests, then explains the results.", image: "/algotrade/copilot-actions.png" },
     { id: "markets", label: "Markets", title: "Live markets", caption: "Search any ticker and study its candles across ranges.", image: "/algotrade/live-data.png" },
   ] satisfies Shot[],
 
   architecture: [
-    { layer: "Interface", items: ["React + TypeScript", "Custom design system", "Vitest"] },
+    { layer: "Interface", items: ["React + TypeScript", "Custom design system", "Hand-built SVG charts"] },
     { layer: "API", items: ["FastAPI routers", "Pydantic validation", "Google ID-token checks"] },
-    { layer: "Engine", items: ["Backtester", "Rule engine", "Portfolio valuer"] },
-    { layer: "Data & AI", items: ["Yahoo Finance", "MongoDB Atlas", "Google Gemini"] },
+    { layer: "Engine", items: ["Backtester & risk metrics", "Walk-forward & ML model", "Rule engine & portfolio"] },
+    { layer: "Data & AI", items: ["Yahoo Finance", "MongoDB Atlas", "Gemini function calling"] },
   ],
 
   engineering: [
-    { title: "No look-ahead bias", body: "Signals use only data up to each close; positions take effect the next day." },
+    { title: "No look-ahead bias", body: "Signals use only data up to each close; the ML model trains only on labels already known. Tests prove it." },
+    { title: "Walk-forward testing", body: "Every quarter re-tunes on the past year and trades unseen data, exposing curve fitting." },
+    { title: "Copilot with real actions", body: "Gemini calls the backtester through function calling, with memoised tools and an offline fallback." },
     { title: "Works on serverless", body: "Signed sessions and per-loop database clients survive Vercel's parallel instances." },
-    { title: "Graceful AI fallback", body: "Tries several Gemini models, then answers from a built-in analyst instead of erroring." },
-    { title: "Secure sign-in", body: "Google tokens are verified server-side for signature, audience and a verified email." },
-    { title: "Lean deployment", body: "Replaced a heavy data library with direct API calls, shrinking the server bundle ~5×." },
-    { title: "Tested and automated", body: "86 tests across backend and frontend run on every push via GitHub Actions." },
+    { title: "Lean deployment", body: "Direct market-data calls and an ML model in plain Python keep the server bundle ~5× smaller." },
+    { title: "Tested and automated", body: "107 tests across backend and frontend run on every push via GitHub Actions." },
   ],
 };
 

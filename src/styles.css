@@ -739,6 +739,29 @@ main {
   transform: scale(1.04);
 }
 
+/* ---------- Demo video ---------- */
+
+.demo-video {
+  display: grid;
+  gap: 0.7rem;
+  justify-items: center;
+  margin-bottom: 2.5rem;
+}
+
+.demo-video video {
+  width: min(100%, 980px);
+  aspect-ratio: 16 / 9;
+  border-radius: 18px;
+  border: 1px solid var(--line-2);
+  background: #07080e;
+  box-shadow: 0 30px 80px -40px rgba(79, 124, 255, 0.55);
+}
+
+.demo-video span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
 /* ---------- Gallery ---------- */
 
 .gallery {

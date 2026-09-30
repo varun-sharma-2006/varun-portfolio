@@ -209,7 +209,7 @@ function Hero() {
         </div>
         <div className="float float-b">
           <span className="mono">Tests passing</span>
-          <strong className="grad">86 / 86</strong>
+          <strong className="grad">107 / 107</strong>
         </div>
       </div>
     </section>
@@ -345,8 +345,14 @@ function Screens() {
   return (
     <section id="screens" className="section">
       <SectionHead eyebrow="Take the tour" title="Inside the app">
-        Real screenshots from the live deployment. Pick a screen.
+        Watch a two-minute walkthrough, or pick a screen.
       </SectionHead>
+      <div className="demo-video" data-reveal>
+        <video controls preload="none" poster={caseStudy.video.poster} playsInline>
+          <source src={caseStudy.video.src} type="video/mp4" />
+        </video>
+        <span className="mono">Product demo · {caseStudy.video.length}</span>
+      </div>
       <Gallery />
     </section>
   );
