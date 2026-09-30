@@ -31,8 +31,7 @@ export const profile = {
   email: "varunsharma42006@gmail.com",
   github: "https://github.com/varun-sharma-2006",
   linkedin: "https://www.linkedin.com/in/varun-sharma-0089321b5",
-  // TODO: put your resume at public/resume.pdf and set this to "/resume.pdf"
-  resume: "",
+  resume: "/resume.pdf",
 
   headline: "I build products that ship, end to end.",
   intro:
