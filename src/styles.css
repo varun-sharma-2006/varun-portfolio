@@ -452,6 +452,11 @@ main {
   letter-spacing: -0.045em;
 }
 
+.hero h1 .grad {
+  display: block;
+  white-space: nowrap;
+}
+
 .lead {
   margin-top: 1.5rem;
   max-width: 52ch;
