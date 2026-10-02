@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
-import { caseStudy, otherProjects, profile, type TimelineItem } from "./profile";
+import { caseStudy, otherProjects, profile, razorGrowth, type Shot, type TimelineItem } from "./profile";
 
 const initials = profile.name
   .split(" ")
@@ -216,13 +216,13 @@ function Hero() {
   );
 }
 
-function Gallery() {
+function Gallery({ shots = caseStudy.gallery }: { shots?: Shot[] }) {
   const [active, setActive] = useState(0);
-  const shot = caseStudy.gallery[active];
+  const shot = shots[active];
   return (
     <div className="gallery" data-reveal>
       <div className="tabs" role="tablist" aria-label="Screens">
-        {caseStudy.gallery.map((item, index) => (
+        {shots.map((item, index) => (
           <button
             key={item.id}
             type="button"
@@ -393,6 +393,93 @@ function Engineering() {
   );
 }
 
+function RazorGrowthProject() {
+  const p = razorGrowth;
+  return (
+    <section id="razorgrowth" className="section">
+      <SectionHead eyebrow={`Second project · ${p.event}`} title={<>{p.name}</>}>
+        {p.tagline}
+      </SectionHead>
+
+      <Spotlight className="overview">
+        <div className="overview-text">
+          <p>{p.summary}</p>
+          <dl>
+            <div>
+              <dt>Team</dt>
+              <dd className="team">
+                {p.team.map((member, i) => (
+                  <span key={member.name}>
+                    <a href={member.href} target="_blank" rel="noreferrer">
+                      {member.name}
+                    </a>
+                    {i < p.team.length - 1 ? <em>&amp;</em> : null}
+                  </span>
+                ))}
+              </dd>
+            </div>
+            <div>
+              <dt>What we built</dt>
+              <dd>{p.role}</dd>
+            </div>
+            <div>
+              <dt>Stack</dt>
+              <dd className="chips">
+                {p.stack.map((s) => (
+                  <span key={s}>{s}</span>
+                ))}
+              </dd>
+            </div>
+          </dl>
+          <div className="cta-row">
+            {p.links.map((link, i) => (
+              <a key={link.href} className={i === 0 ? "btn btn-primary" : "btn btn-glass"} href={link.href} target="_blank" rel="noreferrer">
+                {link.label}
+                <External />
+              </a>
+            ))}
+          </div>
+        </div>
+        <div className="stats">
+          {p.stats.map((stat) => (
+            <div key={stat.label} className="stat">
+              <strong className="grad">
+                <CountUp value={stat.value} suffix={stat.suffix} />
+              </strong>
+              <span>{stat.label}</span>
+            </div>
+          ))}
+        </div>
+      </Spotlight>
+
+      <div className="story">
+        {p.story.map((step, index) => (
+          <Spotlight key={step.title} className="story-card">
+            <span className="mono step">0{index + 1}</span>
+            <span className="eyebrow">{step.kicker}</span>
+            <h3>{step.title}</h3>
+            <p>{step.body}</p>
+          </Spotlight>
+        ))}
+      </div>
+
+      <Gallery shots={p.gallery} />
+
+      <div className="eng-grid">
+        {p.engineering.map((item) => (
+          <Spotlight key={item.title} className="eng-card">
+            <span className="eng-icon">
+              <EngIcon index={item.icon} />
+            </span>
+            <h3>{item.title}</h3>
+            <p>{item.body}</p>
+          </Spotlight>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function About() {
   const shown = otherProjects.filter((p) => p.show);
   return (
@@ -533,6 +620,7 @@ export default function App() {
           <a href="#project">Project</a>
           <a href="#features">Features</a>
           <a href="#engineering">Engineering</a>
+          <a href="#razorgrowth">RazorGrowth</a>
           <a href="#about">About</a>
         </nav>
         <a className="btn btn-small" href="#contact">
@@ -546,6 +634,7 @@ export default function App() {
         <Features />
         <Screens />
         <Engineering />
+        <RazorGrowthProject />
         <About />
         <Contact />
       </main>

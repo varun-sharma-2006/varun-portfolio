@@ -46,9 +46,9 @@ export const profile = {
 
   skills: [
     { group: "Languages", items: ["Python", "C++", "TypeScript", "JavaScript"] },
-    { group: "Backend", items: ["FastAPI", "REST APIs", "MongoDB", "Pydantic"] },
+    { group: "Backend", items: ["FastAPI", "REST APIs", "MongoDB", "SQLAlchemy & Alembic", "Pydantic"] },
     { group: "Frontend", items: ["React", "Vite", "CSS & design systems", "Responsive UI"] },
-    { group: "AI & ML", items: ["Machine learning", "Scikit-learn", "Pandas", "NumPy", "Gemini function calling"] },
+    { group: "AI & ML", items: ["Machine learning", "Scikit-learn", "Pandas", "NumPy", "Gemini function calling", "AI agents with guardrails"] },
     { group: "Quant", items: ["Backtesting", "Risk analytics", "Walk-forward testing", "Time-series analysis"] },
     { group: "Engineering", items: ["pytest & Vitest", "GitHub Actions CI", "Vercel", "Docker", "Google OAuth"] },
   ],
@@ -203,12 +203,87 @@ export const caseStudy = {
   ],
 };
 
+/** The second featured project. */
+export const razorGrowth = {
+  name: "RazorGrowth",
+  tagline: "An AI agent that wins back failed payments, without ever holding the purse strings.",
+  summary:
+    "Failed payments quietly cost merchants revenue. RazorGrowth is an AI agent that spots them and proposes " +
+    "Razorpay recovery campaigns, but it can't spend a rupee on its own: every proposal passes a deterministic " +
+    "policy engine and needs the merchant's explicit approval, and every step is audited. To let anyone try it, " +
+    "it ships as a live simulator: run a store for a week, command the agent, and compete on a weekly leaderboard.",
+  event: "Razorpay AI Buildathon 2026",
+  links: [
+    { label: "Open live demo", href: "https://razorgrowth.vercel.app" },
+    { label: "View source", href: "https://github.com/varun-sharma-2006/Razorgrowth" },
+  ] satisfies Link[],
+  role: "Agent, policy engine, simulator, interface and deployment",
+  team: [
+    { name: "Varun Sharma", href: "https://github.com/varun-sharma-2006" },
+    { name: "Yashika Garg", href: "https://github.com/yashikagarg16" },
+  ],
+  stack: ["Python", "FastAPI", "SQLAlchemy", "Alembic", "React", "TypeScript", "Razorpay API", "Google sign-in", "Vercel", "FastAPI Cloud"],
+
+  stats: [
+    { value: 69, suffix: "", label: "Automated tests" },
+    { value: 5, suffix: "", label: "Market scenarios" },
+    { value: 168, suffix: "h", label: "Simulated per week" },
+    { value: 0, suffix: "", label: "Duplicate links on retry" },
+  ],
+
+  story: [
+    {
+      kicker: "The problem",
+      title: "AI that can spend money is a liability",
+      body:
+        "An agent that recovers revenue has to send payment links and offer discounts. Letting an LLM do that " +
+        "unchecked is how you get runaway incentives and duplicate charges.",
+    },
+    {
+      kicker: "The approach",
+      title: "The AI proposes, code and people decide",
+      body:
+        "LLM output must pass a strict schema, then a deterministic policy engine (budget cap, incentive wallet), " +
+        "then the merchant. Approval is atomic, and every Razorpay link carries a deterministic reference ID, so a " +
+        "retry after a timeout can never create a second link.",
+    },
+    {
+      kicker: "The result",
+      title: "A score that can't be gamed",
+      body:
+        "The simulator counts only revenue recovered beyond what customers would have paid back anyway. Doing " +
+        "nothing scores exactly zero, and over-generous discounts lose to well-timed ones.",
+    },
+  ],
+
+  gallery: [
+    { id: "signin", label: "Sign in", title: "Sign in with Google", caption: "A live recovery feed tells the story: a payment fails, the agent proposes, policy passes, you approve, the customer pays.", image: "/razorgrowth/login.png" },
+    { id: "scenarios", label: "Scenarios", title: "Pick a week", caption: "Five scenarios, from a steady week to a UPI outage. Everyone gets the same customers each week, so the leaderboard is fair.", image: "/razorgrowth/new-run.png" },
+    { id: "dashboard", label: "Dashboard", title: "Mission control", caption: "Score, incentive wallet and recovery figures update every simulated hour, driven from a media-player style dock.", image: "/razorgrowth/dashboard.png" },
+    { id: "charts", label: "Live charts", title: "You vs doing nothing", caption: "Recovered revenue against what would have come back anyway, and failures by payment method with market events.", image: "/razorgrowth/charts.png" },
+    { id: "approval", label: "Approval", title: "Permissioned approval", caption: "The policy checklist explains why an action is allowed. Approve, reject, or resize the incentive and skip failure types.", image: "/razorgrowth/approval.png" },
+    { id: "campaigns", label: "Campaigns", title: "Recovery links", caption: "One Razorpay Payment Link per failed payment, each with its share of the incentive and its outcome.", image: "/razorgrowth/campaigns.png" },
+    { id: "lab", label: "Safety lab", title: "Fault injection", caption: "Policy block, gateway timeouts with safe halt, and a lost response recovered without a duplicate link.", image: "/razorgrowth/safety-lab.png" },
+    { id: "results", label: "Results", title: "End of the week", caption: "The score breakdown, return on incentive, and a submission to the weekly leaderboard.", image: "/razorgrowth/results.png" },
+  ] satisfies Shot[],
+
+  engineering: [
+    { icon: 3, title: "Deterministic guardrails", body: "A policy engine checks every proposal against the safety cap and incentive wallet, at proposal time and again at approval." },
+    { icon: 2, title: "Validated AI output", body: "Gemini or OpenAI output must match a strict schema; anything malformed or out of range falls back to a data-derived heuristic." },
+    { icon: 4, title: "No duplicate payments", body: "Atomic approvals, deterministic Razorpay reference IDs, retries with backoff and a safe halt. Tested with injected faults." },
+    { icon: 0, title: "A fair simulator", body: "Seeded per scenario and week, with a customer-behaviour model; future outcomes never reach the browser." },
+    { icon: 1, title: "Accounts, not keys", body: "Google sign-in verified on the server, httpOnly sessions, admins by email, signed and de-duplicated webhooks." },
+    { icon: 5, title: "Tested and migrated", body: "69 backend tests including concurrency and security cases, Alembic migrations and CI on every push." },
+  ],
+};
+
 /**
  * Other GitHub projects, hidden until they get their own case study.
  * Set `show: true` on a project to list it in the "More work" section.
  */
 export const otherProjects = [
-  { name: "RazorGrowth", tagline: "AI merchant-growth agent (Razorpay AI Buildathon 2026)", href: "https://github.com/varun-sharma-2006/Razorgrowth", show: false },
+  // RazorGrowth is featured as its own section (see `razorGrowth` above).
+  { name: "RazorGrowth", tagline: "Permissioned AI revenue-recovery agent (Razorpay AI Buildathon 2026)", href: "https://github.com/varun-sharma-2006/Razorgrowth", show: false },
   { name: "AgriGuard", tagline: "Multi-modal crop disease detection", href: "https://github.com/varun-sharma-2006/Agriguard", show: false },
   { name: "Vedave", tagline: "Luxury fashion rental, buy & sell marketplace", href: "https://github.com/varun-sharma-2006/Vedave", show: false },
 ];
