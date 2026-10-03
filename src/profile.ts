@@ -217,11 +217,8 @@ export const razorGrowth = {
     { label: "Open live demo", href: "https://razorgrowth.vercel.app" },
     { label: "View source", href: "https://github.com/varun-sharma-2006/Razorgrowth" },
   ] satisfies Link[],
-  role: "Agent, policy engine, simulator, interface and deployment",
-  team: [
-    { name: "Varun Sharma", href: "https://github.com/varun-sharma-2006" },
-    { name: "Yashika Garg", href: "https://github.com/yashikagarg16" },
-  ],
+  role: "Everything: agent, policy engine, simulator, interface and deployment",
+  team: [{ name: "Varun Sharma", href: "https://github.com/varun-sharma-2006" }],
   stack: ["Python", "FastAPI", "SQLAlchemy", "Alembic", "React", "TypeScript", "Razorpay API", "Google sign-in", "Vercel", "FastAPI Cloud"],
 
   stats: [

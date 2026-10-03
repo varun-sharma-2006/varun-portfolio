@@ -406,7 +406,7 @@ function RazorGrowthProject() {
           <p>{p.summary}</p>
           <dl>
             <div>
-              <dt>Team</dt>
+              <dt>Built by</dt>
               <dd className="team">
                 {p.team.map((member, i) => (
                   <span key={member.name}>
@@ -419,7 +419,7 @@ function RazorGrowthProject() {
               </dd>
             </div>
             <div>
-              <dt>What we built</dt>
+              <dt>What I built</dt>
               <dd>{p.role}</dd>
             </div>
             <div>
