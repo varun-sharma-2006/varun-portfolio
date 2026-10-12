@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
-import { caseStudy, otherProjects, profile, razorGrowth, type Shot, type TimelineItem } from "./profile";
+import { caseStudy, freightAudit, otherProjects, profile, razorGrowth, type FeaturedProjectData, type Shot, type TimelineItem } from "./profile";
 
 const initials = profile.name
   .split(" ")
@@ -393,11 +393,11 @@ function Engineering() {
   );
 }
 
-function RazorGrowthProject() {
-  const p = razorGrowth;
+/** A featured project section (overview, stats, story, gallery, engineering). Data lives in profile.ts. */
+function FeaturedProject({ id, eyebrow, p }: { id: string; eyebrow: string; p: FeaturedProjectData }) {
   return (
-    <section id="razorgrowth" className="section">
-      <SectionHead eyebrow={`Second project · ${p.event}`} title={<>{p.name}</>}>
+    <section id={id} className="section">
+      <SectionHead eyebrow={eyebrow} title={<>{p.name}</>}>
         {p.tagline}
       </SectionHead>
 
@@ -620,6 +620,7 @@ export default function App() {
           <a href="#project">Project</a>
           <a href="#features">Features</a>
           <a href="#engineering">Engineering</a>
+          <a href="#freight">Freight Audit</a>
           <a href="#razorgrowth">RazorGrowth</a>
           <a href="#about">About</a>
         </nav>
@@ -634,7 +635,8 @@ export default function App() {
         <Features />
         <Screens />
         <Engineering />
-        <RazorGrowthProject />
+        <FeaturedProject id="freight" eyebrow="Second project · Applied AI" p={freightAudit} />
+        <FeaturedProject id="razorgrowth" eyebrow={`Third project · ${razorGrowth.event}`} p={razorGrowth} />
         <About />
         <Contact />
       </main>

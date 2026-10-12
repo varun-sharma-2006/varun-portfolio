@@ -203,7 +203,94 @@ export const caseStudy = {
   ],
 };
 
-/** The second featured project. */
+/** Shape shared by the featured-project sections below. */
+export interface FeaturedProjectData {
+  name: string;
+  tagline: string;
+  summary: string;
+  event?: string;
+  links: Link[];
+  role: string;
+  team: { name: string; href: string }[];
+  stack: string[];
+  stats: { value: number; suffix: string; label: string }[];
+  story: { kicker: string; title: string; body: string }[];
+  gallery: Shot[];
+  engineering: { icon: number; title: string; body: string }[];
+}
+
+/** Freight Invoice Auditor. Numbers come from the project's eval harness (fresh held-out test split). */
+export const freightAudit: FeaturedProjectData = {
+  name: "Freight Invoice Auditor",
+  tagline: "An AI auditor that catches carrier overcharges, and proves every claim before a person sends it.",
+  summary:
+    "Carriers bill shippers with invoices full of line items, and they often don't match the contract. This agent " +
+    "reads a carrier's invoice PDF, checks every line against the contracted rate sheet, flags overcharges with the " +
+    "exact contract clause and invoice line as evidence, and drafts a dispute that a signed-in reviewer must approve " +
+    "before anything is sent.",
+  links: [
+    { label: "Open live demo", href: "https://freight-invoice-auditing-agent.vercel.app" },
+    { label: "View source", href: "https://github.com/varun-sharma-2006/Freight-Invoice-Auditing-Agent" },
+  ],
+  role: "Design, extraction, rule engine, evaluation harness, interface and deployment",
+  team: [{ name: "Varun Sharma", href: "https://github.com/varun-sharma-2006" }],
+  stack: ["Python", "FastAPI", "Pydantic", "SQLAlchemy", "Gemini API", "pdfplumber", "React", "TypeScript", "Tailwind CSS", "Vercel", "GitHub Actions"],
+
+  stats: [
+    { value: 100, suffix: "", label: "Automated tests" },
+    { value: 8, suffix: "", label: "Overcharge types caught" },
+    { value: 100, suffix: "%", label: "Precision on unseen invoices" },
+    { value: 0, suffix: "", label: "Emails sent without approval" },
+  ],
+
+  story: [
+    {
+      kicker: "The problem",
+      title: "Overbilling hides in line items",
+      body:
+        "A freight invoice can carry a dozen charges: base freight, bunker surcharge, port fees, detention. Rates " +
+        "change by lane, container type and validity period, so wrong rates, duplicate lines and extra fees slip " +
+        "through, and checking every invoice by hand rarely happens.",
+    },
+    {
+      kicker: "The approach",
+      title: "The LLM reads, code decides",
+      body:
+        "An LLM turns the PDF into validated fields. A deterministic rule engine does every comparison and " +
+        "calculation, because LLMs are unreliable at arithmetic and a wrong accusation against a carrier is costly. " +
+        "Every finding cites its evidence, and a reviewer approves before anything is sent.",
+    },
+    {
+      kicker: "The result",
+      title: "Measured, not claimed",
+      body:
+        "In an ablation on 60 held-out invoices, letting the same model judge invoices itself dropped precision from " +
+        "98.1% to 65.7% and made USD 7,030 of false claims against carriers, versus USD 138. After fixing two " +
+        "extraction gaps found on the dev set, the hybrid scored 100% precision and recall on a fresh test split.",
+    },
+  ],
+
+  gallery: [
+    { id: "signin", label: "Sign in", title: "Reviewer sign-in", caption: "Signed, expiring sessions. Every API route requires them, and evaluators get one-click demo access.", image: "/freight/login.png" },
+    { id: "dashboard", label: "Dashboard", title: "Audit workspace", caption: "Overcharges found, invoices needing review and disputes at a glance, with drag-and-drop upload and the carrier contracts on file.", image: "/freight/dashboard.png" },
+    { id: "review", label: "Review", title: "Invoice review", caption: "Every extracted field and line, each charge mapped to a standard type, with the flagged lines highlighted.", image: "/freight/review.png" },
+    { id: "findings", label: "Evidence", title: "Findings with evidence", caption: "An expired rate and miscalculated detention, each with the invoice line and the contract clause side by side.", image: "/freight/findings.png" },
+    { id: "dispute", label: "Approval", title: "Approval-gated dispute", caption: "A drafted dispute email the reviewer can edit, approve or reject. Sending stays locked until a signed-in reviewer approves.", image: "/freight/dispute.png" },
+    { id: "audit", label: "Audit trail", title: "Tamper-evident log", caption: "Every upload, extraction, audit and approval, each event chained to the previous one by SHA-256.", image: "/freight/audit.png" },
+    { id: "eval", label: "Evaluation", title: "Measured accuracy", caption: "Extraction accuracy, recall, precision and recovered money per error type, on a held-out test split.", image: "/freight/eval.png" },
+  ],
+
+  engineering: [
+    { icon: 0, title: "Deterministic rule engine", body: "Eight error types, from expired rate periods and detention free days to FX and tax, checked in code with tolerances. Only overcharges are disputed." },
+    { icon: 3, title: "Human approval, real identity", body: "Sending is refused unless a signed-in reviewer approved the dispute; approvals carry the reviewer's identity, never a typed name." },
+    { icon: 2, title: "The LLM can't invent numbers", body: "LLM extraction is schema-validated and retried. Drafted emails are checked against the findings, and any made-up figure falls back to a template." },
+    { icon: 4, title: "Fails safe", body: "Unreadable layouts, low-confidence fields and impossible date orders go to human review instead of becoming accusations." },
+    { icon: 1, title: "An honest evaluation", body: "A labelled synthetic generator with a held-out invoice layout, an ablation against an LLM-only baseline, and a fresh test split after fixes." },
+    { icon: 5, title: "Tested and traceable", body: "100 tests in CI, idempotent uploads, duplicate-invoice detection and a hash-chained, append-only audit log." },
+  ],
+};
+
+/** The third featured project. */
 export const razorGrowth = {
   name: "RazorGrowth",
   tagline: "An AI agent that wins back failed payments, without ever holding the purse strings.",
