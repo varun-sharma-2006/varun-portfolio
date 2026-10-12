@@ -617,9 +617,7 @@ export default function App() {
           <span>{profile.name}</span>
         </a>
         <nav>
-          <a href="#project">Project</a>
-          <a href="#features">Features</a>
-          <a href="#engineering">Engineering</a>
+          <a href="#project">Algo Trade</a>
           <a href="#freight">Freight Audit</a>
           <a href="#razorgrowth">RazorGrowth</a>
           <a href="#about">About</a>
