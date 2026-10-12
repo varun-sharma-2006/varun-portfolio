@@ -264,9 +264,9 @@ export const freightAudit: FeaturedProjectData = {
       kicker: "The result",
       title: "Measured, not claimed",
       body:
-        "In an ablation on 60 held-out invoices, letting the same model judge invoices itself dropped precision from " +
-        "98.1% to 65.7% and made USD 7,030 of false claims against carriers, versus USD 138. After fixing two " +
-        "extraction gaps found on the dev set, the hybrid scored 100% precision and recall on a fresh test split.",
+        "On 60 unseen invoices, the hybrid caught all 58 injected errors with no false findings. Given the same " +
+        "PDFs, letting the model judge the invoices itself dropped precision to 51.9% and falsely accused carriers on " +
+        "9 of the 25 invoices that had no errors.",
     },
   ],
 
@@ -277,7 +277,7 @@ export const freightAudit: FeaturedProjectData = {
     { id: "findings", label: "Evidence", title: "Findings with evidence", caption: "An expired rate and miscalculated detention, each with the invoice line and the contract clause side by side.", image: "/freight/findings.png" },
     { id: "dispute", label: "Approval", title: "Approval-gated dispute", caption: "A drafted dispute email the reviewer can edit, approve or reject. Sending stays locked until a signed-in reviewer approves.", image: "/freight/dispute.png" },
     { id: "audit", label: "Audit trail", title: "Tamper-evident log", caption: "Every upload, extraction, audit and approval, each event chained to the previous one by SHA-256.", image: "/freight/audit.png" },
-    { id: "eval", label: "Evaluation", title: "Measured accuracy", caption: "Extraction accuracy, recall, precision and recovered money per error type, on a held-out test split.", image: "/freight/eval.png" },
+    { id: "eval", label: "Evaluation", title: "Measured accuracy", caption: "The hybrid against an LLM-only baseline on the same unseen invoices: 100% vs 51.9% precision, per error type.", image: "/freight/eval.png" },
   ],
 
   engineering: [
