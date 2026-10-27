@@ -1299,7 +1299,8 @@ function Projects() {
 
 /* ---------- Now + live GitHub activity ---------- */
 
-const GH_WEEKS = 13;
+// GitHub's public events API only covers the last 30 days.
+const GH_DAYS = 30;
 
 /** Cached copy from /api/github; straight from GitHub if that isn't available (e.g. local dev). */
 async function loadGitHub(): Promise<GitHubData> {
@@ -1335,38 +1336,33 @@ function timeAgo(iso: string) {
   return months === 1 ? "a month ago" : `${months} months ago`;
 }
 
-function Heatmap({ days }: { days: Record<string, number> }) {
-  // GitHub timestamps are UTC, so the grid is laid out in UTC days, Sunday to Saturday.
+function ActivityBars({ days }: { days: Record<string, number> }) {
+  // GitHub timestamps are UTC, so bars are UTC days, oldest on the left.
   const DAY = 86400000;
   const today = Math.floor(Date.now() / DAY) * DAY;
-  const start = today - (new Date(today).getUTCDay() + (GH_WEEKS - 1) * 7) * DAY;
-  const cells: { key: string; count: number; future: boolean }[] = [];
-  for (let i = 0; i < GH_WEEKS * 7; i++) {
-    const t = start + i * DAY;
+  const bars = Array.from({ length: GH_DAYS }, (_, i) => {
+    const t = today - (GH_DAYS - 1 - i) * DAY;
     const key = new Date(t).toISOString().slice(0, 10);
-    cells.push({ key, count: days[key] ?? 0, future: t > today });
-  }
-  const total = cells.reduce((n, c) => n + c.count, 0);
-  const active = cells.filter((c) => c.count > 0).length;
-  const level = (n: number) => (n === 0 ? 0 : n < 3 ? 1 : n < 6 ? 2 : n < 10 ? 3 : 4);
+    return { key, count: days[key] ?? 0, label: new Date(t).toLocaleDateString("en", { day: "numeric", month: "short", timeZone: "UTC" }) };
+  });
+  const max = Math.max(1, ...bars.map((b) => b.count));
+  const total = bars.reduce((n, b) => n + b.count, 0);
+  const active = bars.filter((b) => b.count > 0).length;
   return (
-    <div className="heat-wrap">
-      <div className="heatmap" role="img" aria-label={`${total} public GitHub events on ${active} days in the last ${GH_WEEKS} weeks`}>
-        {cells.map((c) => (
-          <i key={c.key} className={c.future ? "future" : `l${level(c.count)}`} title={c.future ? undefined : `${c.key}: ${c.count} event${c.count === 1 ? "" : "s"}`} />
+    <div className="bars-wrap">
+      <div className="bars" role="img" aria-label={`${total} public GitHub events on ${active} of the last ${GH_DAYS} days`}>
+        {bars.map((b) => (
+          <span key={b.key} className={b.count ? "bar" : "bar empty"} title={`${b.label}: ${b.count} event${b.count === 1 ? "" : "s"}`}>
+            <i style={{ height: b.count ? `${Math.max(10, (b.count / max) * 100)}%` : undefined }} />
+          </span>
         ))}
       </div>
-      <div className="heat-legend mono">
+      <div className="bars-axis mono">
+        <span>{bars[0].label}</span>
         <span>
-          {total} events · {active} active days · last {GH_WEEKS} weeks
+          {total} events · {active} active days
         </span>
-        <span className="heat-scale" aria-hidden="true">
-          less <i className="l0" />
-          <i className="l1" />
-          <i className="l2" />
-          <i className="l3" />
-          <i className="l4" /> more
-        </span>
+        <span>Today</span>
       </div>
     </div>
   );
@@ -1421,7 +1417,7 @@ function Now() {
           </div>
           {gh ? (
             <>
-              <Heatmap days={gh.days} />
+              <ActivityBars days={gh.days} />
               <ul className="gh-repos">
                 {gh.recent.map((r) => (
                   <li key={r.url}>
