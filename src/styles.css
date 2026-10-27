@@ -1887,6 +1887,124 @@ main {
   margin-top: 0.35rem;
 }
 
+/* ---------- Certifications ---------- */
+
+.certs {
+  margin-top: clamp(2.5rem, 5vw, 3.5rem);
+  scroll-margin-top: var(--nav-h);
+}
+
+.certs-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.certs-head h3 {
+  font-size: clamp(1.4rem, 2.6vw, 1.8rem);
+}
+
+.cert-group {
+  margin-top: 1.5rem;
+}
+
+.cert-group-title {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: #b9a7ff;
+}
+
+.cert-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.cert {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015)), rgba(8, 10, 20, 0.6);
+  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.cert:hover {
+  border-color: rgba(167, 139, 250, 0.45);
+  box-shadow: 0 18px 40px -24px rgba(139, 92, 246, 0.9);
+}
+
+.cert.in:hover {
+  transform: translateY(-3px);
+}
+
+.cert-mark {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 13px;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #2a5bd7, #4f7cff 55%, #22d3ee);
+  box-shadow: 0 10px 24px -12px rgba(79, 124, 255, 0.9);
+}
+
+.cert-hackerrank .cert-mark {
+  background: linear-gradient(135deg, #0f9d58, #2ec866 55%, #a3e635);
+  box-shadow: 0 10px 24px -12px rgba(46, 200, 102, 0.9);
+}
+
+.cert-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.15rem;
+  line-height: 1.35;
+}
+
+.cert-text strong {
+  font-size: 0.97rem;
+  font-weight: 600;
+}
+
+.cert-text > span {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.cert-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: var(--faint);
+  transition: color 0.2s ease;
+}
+
+.cert:hover .cert-open {
+  color: #aef2fb;
+}
+
+@media (max-width: 760px) {
+  .cert-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cert-open {
+    font-size: 0;
+    gap: 0;
+  }
+}
+
 /* ---------- Contact ---------- */
 
 .contact {

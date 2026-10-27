@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent, type ReactNode } from "react";
 import { Analytics } from "@vercel/analytics/react";
-import { otherProjects, profile, projects, type FeaturedProjectData, type Shot, type TimelineItem } from "./profile";
+import { otherProjects, profile, projects, type Certification, type FeaturedProjectData, type Shot, type TimelineItem } from "./profile";
 import { offlineAnswer, sources as sourceNames, SUGGESTED_QUESTIONS, type AskAnswer } from "./knowledge";
 import { GH_USER, githubSummary, type GitHubData } from "./github";
 
@@ -564,6 +564,7 @@ function CommandPalette({ open, onClose, onAsk }: { open: boolean; onClose: () =
       { group: "Links", label: "GitHub", hint: "github.com", run: () => window.open(profile.github, "_blank", "noopener") },
       { group: "Links", label: "LinkedIn", hint: "linkedin.com", run: () => window.open(profile.linkedin, "_blank", "noopener") },
       ...SECTIONS.map((s) => ({ group: "Sections", label: s.label, hint: `0${sectionNumber(s.id)}`, run: () => scrollToSection(s.id) })),
+      { group: "Sections", label: "Certifications", hint: `${profile.certifications.length} certificates`, run: () => scrollToSection("certifications") },
       ...projects.flatMap((p) => [
         { group: "Projects", label: p.name, hint: p.category, run: () => scrollToSection(p.id) },
         ...p.links.map((l) => ({
@@ -1492,7 +1493,7 @@ function Education() {
   if (!profile.education.length) return null;
   return (
     <section id="education" className="section">
-      <SectionHead index={sectionNumber("education")} eyebrow="Education" title={<>Where I'm <span className="grad">learning</span></>} />
+      <SectionHead index={sectionNumber("education")} eyebrow="Education & certifications" title={<>Where I'm <span className="grad">learning</span></>} />
       <div className="edu">
         {profile.education.map((e) => (
           <Spotlight key={e.title} className="edu-card">
@@ -1520,7 +1521,55 @@ function Education() {
           </Spotlight>
         ))}
       </div>
+      <Certifications />
     </section>
+  );
+}
+
+/** Issuer initials for the certificate badge, e.g. "BITS Pilani" -> "BP", "HackerRank" -> "HR". */
+const issuerMark = (c: Certification) => {
+  const words = (c.issuer || c.platform).split(/\s+/);
+  const letters = words.length > 1 ? words.map((w) => w[0]).join("") : (words[0].match(/[A-Z]/g)?.join("") ?? words[0][0]);
+  return letters.toUpperCase().slice(0, 2);
+};
+
+function Certifications() {
+  const certs = profile.certifications;
+  if (!certs.length) return null;
+  const groups = (["Skill test", "Course"] as const)
+    .map((kind) => ({ kind, items: certs.filter((c) => c.kind === kind) }))
+    .filter((g) => g.items.length);
+  return (
+    <div id="certifications" className="certs">
+      <div className="certs-head" data-reveal>
+        <h3>Certifications</h3>
+        <span className="mono">{certs.length} certificates · click any to open</span>
+      </div>
+      {groups.map((g) => (
+        <div key={g.kind} className="cert-group">
+          <span className="mono cert-group-title">{g.kind === "Skill test" ? "Skill certifications" : "Courses"}</span>
+          <div className="cert-grid">
+            {g.items.map((c) => (
+              <a key={c.href} className={`cert cert-${c.platform.toLowerCase()}`} href={c.href} target="_blank" rel="noreferrer" data-reveal>
+                <span className="cert-mark" aria-hidden="true">
+                  {issuerMark(c)}
+                </span>
+                <span className="cert-text">
+                  <strong>{c.name}</strong>
+                  <span>
+                    {c.issuer && c.issuer !== c.platform ? `${c.issuer} · ` : ""}
+                    {c.platform}
+                  </span>
+                </span>
+                <span className="cert-open">
+                  View <External />
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 

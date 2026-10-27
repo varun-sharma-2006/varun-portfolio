@@ -37,6 +37,16 @@ export const passages: Passage[] = [
       .join(" "),
   },
   {
+    id: "education",
+    title: "Certifications",
+    text:
+      "Certificates and certifications: " +
+      profile.certifications
+        .map((c) => `${c.name} (${c.kind.toLowerCase()}, ${c.issuer && c.issuer !== c.platform ? `${c.issuer} on ` : ""}${c.platform})`)
+        .join("; ") +
+      ".",
+  },
+  {
     id: "experience",
     title: "Experience",
     text: profile.experience.map((e) => `${e.title}, ${e.place} (${e.period}). ${e.details ?? ""}`).join(" "),
