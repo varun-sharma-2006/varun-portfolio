@@ -64,7 +64,7 @@ describe("/api/ask", () => {
     const fetch = vi.fn(async () => new Response("", { status: 404 }));
     vi.stubGlobal("fetch", fetch);
     const data = await (await ask(post({ question: "Tell me about BidPulse" }, "10.0.0.6"))).json();
-    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenCalledTimes(3);
     expect(data.mode).toBe("offline");
     expect(data.reason).toContain("gemini-flash-latest");
   });

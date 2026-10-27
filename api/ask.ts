@@ -73,14 +73,14 @@ export default async function handler(req: Request): Promise<Response> {
   const key = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   if (!key) return json({ ...offlineAnswer(question), reason: "no-key" });
 
-  // "gemini-flash-latest" always points at Google's current Flash model, so the default never goes stale.
-  const models = [...new Set([process.env.GEMINI_MODEL, "gemini-flash-latest"].filter((m): m is string => !!m))];
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 12000);
+  // Google's "-latest" aliases never go stale. Lite answers fastest; if a model is missing, busy or slow, try the next.
+  const models = [...new Set([process.env.GEMINI_MODEL, "gemini-flash-lite-latest", "gemini-flash-latest"].filter((m): m is string => !!m))];
   // Why we fell back, so a misconfigured key or model shows up in the response (never the key itself).
   let reason = "gemini-error";
-  try {
-    for (const model of models) {
+  for (const model of models) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 7000);
+    try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
         method: "POST",
         signal: controller.signal,
@@ -103,13 +103,11 @@ export default async function handler(req: Request): Promise<Response> {
           },
         }),
       });
-      if (res.status === 404) {
-        reason = `gemini-404 (model ${model} not found)`;
-        continue;
-      }
       if (!res.ok) {
-        reason = `gemini-${res.status}`;
-        break;
+        reason = res.status === 404 ? `gemini-404 (model ${model} not found)` : `gemini-${res.status}`;
+        // A bad or unauthorised key fails the same way on every model.
+        if (res.status === 400 || res.status === 401 || res.status === 403) break;
+        continue;
       }
       reason = "gemini-bad-reply";
       const data = await res.json();
@@ -119,12 +117,11 @@ export default async function handler(req: Request): Promise<Response> {
       if (!answer) throw new Error("Empty answer");
       const cited = Array.isArray(parsed.sources) ? parsed.sources.map(String).filter((s) => s in sources) : [];
       return json({ answer, sources: Array.from(new Set(cited)).slice(0, 3), mode: "ai" } satisfies AskAnswer);
+    } catch (e) {
+      reason = controller.signal.aborted ? "gemini-timeout" : reason === "gemini-bad-reply" ? reason : `gemini-error (${String(e).slice(0, 80)})`;
+    } finally {
+      clearTimeout(timer);
     }
-  } catch (e) {
-    if (controller.signal.aborted) reason = "gemini-timeout";
-    else if (reason === "gemini-error") reason = `gemini-error (${String(e).slice(0, 80)})`;
-  } finally {
-    clearTimeout(timer);
   }
   return json({ ...offlineAnswer(question), reason });
 }
