@@ -65,7 +65,7 @@ export function NeuralBackground() {
           const b = nodes[j];
           const d = Math.hypot(a.x - b.x, a.y - b.y);
           if (d < link) {
-            ctx.strokeStyle = `rgba(140, 150, 255, ${(1 - d / link) * 0.22})`;
+            ctx.strokeStyle = `rgba(167, 139, 250, ${(1 - d / link) * 0.22})`;
             ctx.lineWidth = 0.8;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
@@ -75,14 +75,14 @@ export function NeuralBackground() {
         }
         const dm = Math.hypot(a.x - mouse.x, a.y - mouse.y);
         if (dm < 200) {
-          ctx.strokeStyle = `rgba(34, 211, 238, ${(1 - dm / 200) * 0.5})`;
+          ctx.strokeStyle = `rgba(196, 181, 253, ${(1 - dm / 200) * 0.5})`;
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(mouse.x, mouse.y);
           ctx.stroke();
         }
-        ctx.fillStyle = dm < 200 ? "rgba(165, 243, 252, 0.95)" : "rgba(196, 181, 253, 0.7)";
+        ctx.fillStyle = dm < 200 ? "rgba(237, 233, 254, 0.95)" : "rgba(196, 181, 253, 0.7)";
         ctx.beginPath();
         ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2);
         ctx.fill();

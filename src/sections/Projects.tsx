@@ -104,7 +104,6 @@ export function ProjectCard({ p, index }: { p: FeaturedProjectData; index: numbe
  * half starts collapsed so all four projects can be skimmed; the project's own page shows everything.
  */
 export function CaseStudy({ p, index, expanded = false }: { p: FeaturedProjectData; index: number; expanded?: boolean }) {
-  const solo = p.team.length === 1;
   const [open, setOpen] = useState(expanded);
   const extras = `${p.video ? "demo video, " : ""}${p.gallery.length} screens and ${p.engineering.length} engineering notes`;
   return (
@@ -126,20 +125,7 @@ export function CaseStudy({ p, index, expanded = false }: { p: FeaturedProjectDa
           <p>{p.summary}</p>
           <dl>
             <div>
-              <dt>{solo ? "Built by" : "Team"}</dt>
-              <dd className="team">
-                {p.team.map((member, i) => (
-                  <span key={member.name}>
-                    <a href={member.href} target="_blank" rel="noreferrer">
-                      {member.name}
-                    </a>
-                    {i < p.team.length - 1 ? <em>&amp;</em> : null}
-                  </span>
-                ))}
-              </dd>
-            </div>
-            <div>
-              <dt>{solo ? "What I built" : "What we built"}</dt>
+              <dt>What I built</dt>
               <dd>{p.role}</dd>
             </div>
             <div>
