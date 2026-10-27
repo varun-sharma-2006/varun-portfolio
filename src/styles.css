@@ -9,7 +9,7 @@
   --line-2: rgba(255, 255, 255, 0.14);
   --text: #eef0f8;
   --muted: #a3a9bf;
-  --faint: #6c7289;
+  --faint: #8a90a8; /* 5.3:1+ on every surface (WCAG AA) */
   --violet: #8b5cf6;
   --blue: #4f7cff;
   --cyan: #22d3ee;
@@ -163,6 +163,18 @@ article[id] {
 .eyebrow b {
   font-weight: 600;
   color: var(--text);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .skip {
@@ -1994,11 +2006,129 @@ main {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  text-align: center;
-  padding: clamp(3rem, 7vw, 5.5rem) clamp(1.25rem, 5vw, 4rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(2rem, 5vw, 4rem);
+  padding: clamp(2rem, 6vw, 4.5rem) clamp(1.25rem, 5vw, 4rem);
   border-radius: 32px;
   border: 1px solid var(--line-2);
   background: linear-gradient(180deg, rgba(139, 92, 246, 0.14), rgba(12, 14, 26, 0.6));
+}
+
+.contact-info .email-copy {
+  margin-top: 1.75rem;
+}
+
+.contact-form {
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  border-radius: 22px;
+  border: 1px solid var(--line-2);
+  background: rgba(8, 10, 20, 0.7);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.contact-form label {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.contact-form label > span {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid var(--line-2);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  outline: none;
+  border-color: rgba(167, 139, 250, 0.7);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+.contact-form textarea::placeholder {
+  color: var(--faint);
+}
+
+.contact-form .btn {
+  justify-self: start;
+}
+
+.contact-form .btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.contact-form .hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.form-error {
+  color: #fca5a5;
+  font-size: 0.88rem;
+}
+
+.form-done {
+  display: grid;
+  justify-items: start;
+  gap: 0.6rem;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  border-radius: 22px;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  background: rgba(8, 10, 20, 0.7);
+}
+
+.form-done strong {
+  font-size: 1.2rem;
+}
+
+.form-done p {
+  color: var(--muted);
+}
+
+.form-done .link,
+.link-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.link-btn {
+  color: var(--muted);
+  transition: color 0.2s ease;
+}
+
+.link-btn:hover {
+  color: var(--text);
 }
 
 .contact-glow {
@@ -2012,12 +2142,12 @@ main {
 
 .contact h2 {
   margin-top: 1.1rem;
-  font-size: clamp(2.2rem, 5.5vw, 4.2rem);
+  font-size: clamp(2.1rem, 4.4vw, 3.4rem);
 }
 
-.contact > p {
-  margin: 1.1rem auto 0;
-  max-width: 54ch;
+.contact-info > p {
+  margin-top: 1.1rem;
+  max-width: 48ch;
   color: var(--muted);
   font-size: 1.05rem;
 }
@@ -2031,9 +2161,20 @@ main {
 .contact-links {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 1.5rem;
-  margin-top: 1.75rem;
+  gap: 0.75rem 1.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 960px) {
+  .contact {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .field-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .contact-links a {
@@ -3029,5 +3170,287 @@ kbd {
   [data-reveal] {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* Phones: the drifting glows are large blurred layers; keep them still and lighter to paint. */
+@media (max-width: 760px), (pointer: coarse) {
+  .blob {
+    animation: none;
+    filter: blur(70px);
+  }
+
+  .b4 {
+    display: none;
+  }
+}
+
+/* ---------- Case study "Show more" ---------- */
+
+.case-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.case-more .btn[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+/* ---------- Project page ---------- */
+
+.project-page {
+  padding-top: 7rem;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+  transition: color 0.2s ease;
+}
+
+.back-link .arrow {
+  transform: rotate(180deg);
+}
+
+.back-link:hover {
+  color: var(--text);
+}
+
+.project-page .case {
+  margin-top: 1.5rem;
+  padding-top: 0;
+  border-top: none;
+}
+
+.project-page .case-head h3 {
+  font-size: clamp(2.4rem, 6vw, 4rem);
+}
+
+.pager {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-top: clamp(3rem, 7vw, 5rem);
+}
+
+.pager-card {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.75rem 0.75rem 1.25rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015)), rgba(8, 10, 20, 0.6);
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+
+.pager-card:hover {
+  border-color: rgba(167, 139, 250, 0.45);
+  transform: translateY(-3px);
+}
+
+.pager-card img {
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  object-fit: cover;
+  object-position: top left;
+  border-radius: 14px;
+  margin-bottom: 0.6rem;
+  border: 1px solid var(--line-2);
+}
+
+.pager-card > :not(img) {
+  padding: 0 0.5rem;
+}
+
+.pager-card strong {
+  font-size: 1.15rem;
+}
+
+.pager-card > span:last-child {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.pager-next {
+  text-align: right;
+}
+
+.project-page-links {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.not-found {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 1.2rem;
+  min-height: 80vh;
+  padding-top: 7rem;
+  text-align: center;
+}
+
+.not-found h1 {
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+}
+
+.not-found p {
+  color: var(--muted);
+}
+
+@media (max-width: 680px) {
+  .pager {
+    grid-template-columns: 1fr;
+  }
+
+  .pager-next {
+    text-align: left;
+  }
+}
+
+/* ---------- Print: a one-page resume ---------- */
+
+.print-resume {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm 13mm;
+  }
+
+  :root,
+  body {
+    /* The site is color-scheme: dark, which makes Chrome paint the page margins dark; print is light. */
+    color-scheme: light;
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  body > #root > :not(.print-resume) {
+    display: none !important;
+  }
+
+  .print-resume {
+    display: block;
+    font-family: var(--sans);
+    font-size: 9.2pt;
+    line-height: 1.4;
+    color: #111;
+  }
+
+  .print-resume header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+    padding-bottom: 6pt;
+    border-bottom: 1.5pt solid #4f46e5;
+  }
+
+  .print-resume h1 {
+    font-size: 21pt;
+    letter-spacing: -0.02em;
+    color: #111;
+  }
+
+  .print-resume header p {
+    margin-top: 2pt;
+    color: #444;
+  }
+
+  .pr-contact {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    text-align: right;
+    font-size: 8.4pt;
+    color: #333;
+  }
+
+  .pr-summary {
+    margin-top: 7pt;
+    color: #222;
+  }
+
+  .print-resume h2 {
+    margin: 9pt 0 3pt;
+    font-size: 9pt;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #4f46e5;
+  }
+
+  .pr-item {
+    margin-bottom: 4.5pt;
+    break-inside: avoid;
+  }
+
+  .pr-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .pr-row span {
+    font-size: 8.2pt;
+    color: #555;
+    white-space: nowrap;
+  }
+
+  .pr-row em {
+    font-style: normal;
+    font-weight: 400;
+    color: #555;
+  }
+
+  .pr-item p {
+    color: #222;
+  }
+
+  .pr-stack {
+    font-size: 8pt;
+    color: #555 !important;
+  }
+
+  .pr-skills {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2pt 14pt;
+  }
+
+  .pr-skills div {
+    display: flex;
+    gap: 5pt;
+  }
+
+  .pr-skills dt {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .pr-skills dd {
+    margin: 0;
+    color: #222;
+  }
+
+  .pr-two {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 14pt;
+  }
+
+  .pr-two p {
+    margin-bottom: 2pt;
   }
 }
