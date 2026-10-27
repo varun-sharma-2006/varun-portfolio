@@ -1,5 +1,8 @@
-import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent, type ReactNode } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { otherProjects, profile, projects, type FeaturedProjectData, type Shot, type TimelineItem } from "./profile";
+import { offlineAnswer, sources as sourceNames, SUGGESTED_QUESTIONS, type AskAnswer } from "./knowledge";
+import { GH_USER, githubSummary, type GitHubData } from "./github";
 
 const initials = profile.name
   .split(" ")
@@ -12,12 +15,25 @@ const SECTIONS = [
   { id: "about", label: "About" },
   { id: "skills", label: "Skills" },
   { id: "projects", label: "Projects" },
+  { id: "now", label: "Now" },
   { id: "experience", label: "Experience" },
   { id: "education", label: "Education" },
   { id: "contact", label: "Contact" },
 ];
 
-const totalTests = projects.reduce((sum, p) => sum + (p.stats.find((s) => /test/i.test(s.label))?.value ?? 0), 0);
+/** A section's number in the top bar (1-based), shown in its heading. */
+const sectionNumber = (id: string) => SECTIONS.findIndex((s) => s.id === id) + 1;
+
+const scrollToSection = (id: string) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth" });
+  history.replaceState(null, "", `#${id}`);
+};
+
+const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+
+const totalTests =projects.reduce((sum, p) => sum + (p.stats.find((s) => /test/i.test(s.label))?.value ?? 0), 0);
 
 /* ---------- Small building blocks ---------- */
 
@@ -368,6 +384,311 @@ function StackMarquee() {
   );
 }
 
+/* ---------- Ask my AI ---------- */
+
+interface ChatMessage {
+  role: "user" | "assistant";
+  text: string;
+  sources?: string[];
+  mode?: AskAnswer["mode"];
+}
+
+/** Ask /api/ask; if the function isn't there (local dev) or fails, answer offline from the site content. */
+async function askAI(question: string, history: ChatMessage[]): Promise<AskAnswer> {
+  try {
+    const res = await fetch("/api/ask", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ question, history: history.slice(-4).map(({ role, text }) => ({ role, text })) }),
+    });
+    const data = (await res.json()) as AskAnswer;
+    if (typeof data?.answer === "string" && data.answer) return data;
+  } catch {
+    // fall through
+  }
+  return offlineAnswer(question);
+}
+
+function AskAI({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 50);
+  }, [open]);
+
+  useEffect(() => {
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages, busy]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  const send = async (question: string) => {
+    const q = question.trim();
+    if (!q || busy) return;
+    setInput("");
+    const history = messages;
+    setMessages((m) => [...m, { role: "user", text: q }]);
+    setBusy(true);
+    const answer = await askAI(q, history);
+    setMessages((m) => [...m, { role: "assistant", text: answer.answer, sources: answer.sources, mode: answer.mode }]);
+    setBusy(false);
+  };
+
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    void send(input);
+  };
+
+  if (!open) return null;
+  return (
+    <div className="ai-panel" role="dialog" aria-modal="false" aria-label="Ask my AI">
+      <span className="ai-ring always" aria-hidden="true" />
+      <div className="ai-head">
+        <span className="spark" aria-hidden="true">
+          ✦
+        </span>
+        <div>
+          <strong>Ask my AI</strong>
+          <span>Answers only from this site, with sources</span>
+        </div>
+        <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <path d="M6 6l12 12M18 6 6 18" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="ai-body" ref={listRef} aria-live="polite">
+        {messages.length === 0 ? (
+          <div className="ai-empty">
+            <p>
+              Hi! I answer questions about {profile.name.split(" ")[0]} using only what's on this site, and I link to where I found it. Try one of these:
+            </p>
+            <div className="ai-suggest">
+              {SUGGESTED_QUESTIONS.map((q) => (
+                <button key={q} type="button" onClick={() => void send(q)}>
+                  {q}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+        {messages.map((m, i) => (
+          <div key={i} className={`msg msg-${m.role}`}>
+            <p>{m.text}</p>
+            {m.role === "assistant" && (m.sources?.length || m.mode === "offline") ? (
+              <div className="msg-meta">
+                {m.sources?.map((s) => (
+                  <a
+                    key={s}
+                    href={`#${s}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      scrollToSection(s);
+                      if (window.innerWidth < 700) onClose();
+                    }}
+                  >
+                    {sourceNames[s] ?? s} ↗
+                  </a>
+                ))}
+                {m.mode === "offline" ? <em title="The AI model was unavailable, so this is the closest passage from the site">offline answer</em> : null}
+              </div>
+            ) : null}
+          </div>
+        ))}
+        {busy ? (
+          <div className="msg msg-assistant typing" aria-label="Thinking">
+            <i />
+            <i />
+            <i />
+          </div>
+        ) : null}
+      </div>
+
+      <form className="ai-form" onSubmit={onSubmit}>
+        <input
+          ref={inputRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Ask about projects, skills, availability…"
+          maxLength={300}
+          aria-label="Your question"
+        />
+        <button type="submit" className="send" disabled={!input.trim() || busy} aria-label="Send">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </button>
+      </form>
+    </div>
+  );
+}
+
+/* ---------- Command palette (⌘K / Ctrl K) ---------- */
+
+interface Command {
+  group: string;
+  label: string;
+  hint?: string;
+  run: () => void;
+}
+
+function CommandPalette({ open, onClose, onAsk }: { open: boolean; onClose: () => void; onAsk: () => void }) {
+  const [query, setQuery] = useState("");
+  const [index, setIndex] = useState(0);
+  const [toast, setToast] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const commands = useMemo<Command[]>(
+    () => [
+      { group: "Actions", label: "Ask my AI about Varun", hint: "Chat", run: onAsk },
+      {
+        group: "Actions",
+        label: "Copy email address",
+        hint: profile.email,
+        run: () => {
+          void navigator.clipboard?.writeText(profile.email).then(() => setToast("Email copied"));
+        },
+      },
+      { group: "Actions", label: "Open resume", hint: "PDF", run: () => window.open(profile.resume, "_blank", "noopener") },
+      { group: "Actions", label: "Send an email", run: () => (window.location.href = `mailto:${profile.email}`) },
+      { group: "Links", label: "GitHub", hint: "github.com", run: () => window.open(profile.github, "_blank", "noopener") },
+      { group: "Links", label: "LinkedIn", hint: "linkedin.com", run: () => window.open(profile.linkedin, "_blank", "noopener") },
+      ...SECTIONS.map((s) => ({ group: "Sections", label: s.label, hint: `0${sectionNumber(s.id)}`, run: () => scrollToSection(s.id) })),
+      ...projects.flatMap((p) => [
+        { group: "Projects", label: p.name, hint: p.category, run: () => scrollToSection(p.id) },
+        ...p.links.map((l) => ({
+          group: "Projects",
+          label: `${p.name}: ${l.label.toLowerCase()}`,
+          hint: "↗",
+          run: () => window.open(l.href, "_blank", "noopener"),
+        })),
+      ]),
+    ],
+    [onAsk],
+  );
+
+  const shown = useMemo(() => {
+    const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!terms.length) return commands;
+    return commands.filter((c) => {
+      const hay = `${c.group} ${c.label} ${c.hint ?? ""}`.toLowerCase();
+      return terms.every((t) => hay.includes(t));
+    });
+  }, [query, commands]);
+
+  useEffect(() => {
+    if (!open) return;
+    setQuery("");
+    setIndex(0);
+    setTimeout(() => inputRef.current?.focus(), 30);
+  }, [open]);
+
+  useEffect(() => setIndex(0), [query]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => {
+      setToast("");
+      onClose();
+    }, 900);
+    return () => clearTimeout(t);
+  }, [toast, onClose]);
+
+  if (!open) return null;
+
+  const pick = (c: Command | undefined) => {
+    if (!c) return;
+    c.run();
+    if (c.label !== "Copy email address") onClose();
+  };
+
+  const onKey = (e: ReactKeyboardEvent) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setIndex((i) => Math.min(i + 1, shown.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setIndex((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      pick(shown[index]);
+    } else if (e.key === "Escape") {
+      onClose();
+    }
+  };
+
+  let lastGroup = "";
+  return (
+    <div className="palette-backdrop" onMouseDown={onClose}>
+      <div className="palette" role="dialog" aria-modal="true" aria-label="Command menu" onMouseDown={(e) => e.stopPropagation()} onKeyDown={onKey}>
+        <div className="palette-input">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
+          </svg>
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search sections, projects, links…"
+            aria-label="Search commands"
+            aria-activedescendant={shown[index] ? `cmd-${index}` : undefined}
+            aria-controls="palette-list"
+          />
+          <kbd>Esc</kbd>
+        </div>
+        <div className="palette-list" id="palette-list" role="listbox">
+          {shown.length === 0 ? <p className="palette-empty">No matches. Try "projects" or "email".</p> : null}
+          {shown.map((c, i) => {
+            const header = c.group !== lastGroup ? c.group : "";
+            lastGroup = c.group;
+            return (
+              <div key={`${c.group}-${c.label}`}>
+                {header ? <span className="mono palette-group">{header}</span> : null}
+                <button
+                  type="button"
+                  id={`cmd-${i}`}
+                  role="option"
+                  aria-selected={i === index}
+                  className={i === index ? "palette-item active" : "palette-item"}
+                  onMouseMove={() => setIndex(i)}
+                  onClick={() => pick(c)}
+                  ref={(el) => {
+                    if (i === index) el?.scrollIntoView({ block: "nearest" });
+                  }}
+                >
+                  <span>{c.label}</span>
+                  {c.hint ? <em>{c.hint}</em> : null}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        <div className="palette-foot mono">
+          <span>
+            <kbd>↑</kbd>
+            <kbd>↓</kbd> to move
+          </span>
+          <span>
+            <kbd>↵</kbd> to select
+          </span>
+          {toast ? <strong className="palette-toast">{toast} ✓</strong> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ---------- Top bar ---------- */
 
 function Chevron() {
@@ -406,7 +727,7 @@ function ProjectsMenu({ onPick }: { onPick: () => void }) {
   );
 }
 
-function Nav({ active, progress, scrolled }: { active: string; progress: number; scrolled: boolean }) {
+function Nav({ active, progress, scrolled, onPalette }: { active: string; progress: number; scrolled: boolean; onPalette: () => void }) {
   const [open, setOpen] = useState(false);
   const [projOpen, setProjOpen] = useState(false);
   const linksRef = useRef<HTMLDivElement>(null);
@@ -487,6 +808,13 @@ function Nav({ active, progress, scrolled }: { active: string; progress: number;
         </nav>
 
         <div className="nav-actions">
+          <button type="button" className="kbd-btn" onClick={onPalette} aria-label="Open command menu" title="Search the site">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            <kbd>{isMac ? "⌘K" : "Ctrl K"}</kbd>
+          </button>
           {profile.resume ? (
             <a className="btn btn-small" href={profile.resume} target="_blank" rel="noreferrer">
               Resume
@@ -677,7 +1005,7 @@ function About() {
   ];
   return (
     <section id="about" className="section">
-      <SectionHead index={1} eyebrow="About" title={<>The person behind <span className="grad">the products</span></>} />
+      <SectionHead index={sectionNumber("about")} eyebrow="About" title={<>The person behind <span className="grad">the products</span></>} />
       <div className="about">
         <Spotlight className="about-card">
           <div className="about-top">
@@ -719,7 +1047,7 @@ function About() {
 function Skills() {
   return (
     <section id="skills" className="section">
-      <SectionHead index={2} eyebrow="Skills" title={<>Tools I <span className="grad">build with</span></>}>
+      <SectionHead index={sectionNumber("skills")} eyebrow="Skills" title={<>Tools I <span className="grad">build with</span></>}>
         Everything here is used in at least one shipped project.
       </SectionHead>
       <div className="skills">
@@ -791,6 +1119,10 @@ function ProjectCard({ p, index }: { p: FeaturedProjectData; index: number }) {
         </div>
         <h3>{p.name}</h3>
         <p>{p.tagline}</p>
+        <p className="project-highlight">
+          <span aria-hidden="true">✦</span>
+          {p.highlight}
+        </p>
         <div className="project-stats">
           {p.stats.slice(0, 3).map((s) => (
             <div key={s.label}>
@@ -927,7 +1259,7 @@ function Projects() {
   const more = otherProjects.filter((p) => p.show);
   return (
     <section id="projects" className="section">
-      <SectionHead index={3} eyebrow="Projects" title={<>Selected <span className="grad">work</span></>}>
+      <SectionHead index={sectionNumber("projects")} eyebrow="Projects" title={<>Selected <span className="grad">work</span></>}>
         {projects.length} products, each live, tested and honestly evaluated. Pick one to read the full case study.
       </SectionHead>
       <div className="project-grid">
@@ -965,6 +1297,166 @@ function Projects() {
   );
 }
 
+/* ---------- Now + live GitHub activity ---------- */
+
+const GH_WEEKS = 13;
+
+/** Cached copy from /api/github; straight from GitHub if that isn't available (e.g. local dev). */
+async function loadGitHub(): Promise<GitHubData> {
+  const cacheKey = `gh:${GH_USER}`;
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(cacheKey) ?? "null") as GitHubData | null;
+    if (cached && Date.now() - cached.fetched < 30 * 60 * 1000) return cached;
+  } catch {
+    // storage unavailable
+  }
+  let data: GitHubData;
+  try {
+    const res = await fetch("/api/github");
+    if (!res.ok || !res.headers.get("content-type")?.includes("json")) throw new Error(String(res.status));
+    data = (await res.json()) as GitHubData;
+  } catch {
+    data = await githubSummary();
+  }
+  try {
+    sessionStorage.setItem(cacheKey, JSON.stringify(data));
+  } catch {
+    // storage unavailable
+  }
+  return data;
+}
+
+function timeAgo(iso: string) {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 30) return `${days} days ago`;
+  const months = Math.floor(days / 30);
+  return months === 1 ? "a month ago" : `${months} months ago`;
+}
+
+function Heatmap({ days }: { days: Record<string, number> }) {
+  // GitHub timestamps are UTC, so the grid is laid out in UTC days, Sunday to Saturday.
+  const DAY = 86400000;
+  const today = Math.floor(Date.now() / DAY) * DAY;
+  const start = today - (new Date(today).getUTCDay() + (GH_WEEKS - 1) * 7) * DAY;
+  const cells: { key: string; count: number; future: boolean }[] = [];
+  for (let i = 0; i < GH_WEEKS * 7; i++) {
+    const t = start + i * DAY;
+    const key = new Date(t).toISOString().slice(0, 10);
+    cells.push({ key, count: days[key] ?? 0, future: t > today });
+  }
+  const total = cells.reduce((n, c) => n + c.count, 0);
+  const active = cells.filter((c) => c.count > 0).length;
+  const level = (n: number) => (n === 0 ? 0 : n < 3 ? 1 : n < 6 ? 2 : n < 10 ? 3 : 4);
+  return (
+    <div className="heat-wrap">
+      <div className="heatmap" role="img" aria-label={`${total} public GitHub events on ${active} days in the last ${GH_WEEKS} weeks`}>
+        {cells.map((c) => (
+          <i key={c.key} className={c.future ? "future" : `l${level(c.count)}`} title={c.future ? undefined : `${c.key}: ${c.count} event${c.count === 1 ? "" : "s"}`} />
+        ))}
+      </div>
+      <div className="heat-legend mono">
+        <span>
+          {total} events · {active} active days · last {GH_WEEKS} weeks
+        </span>
+        <span className="heat-scale" aria-hidden="true">
+          less <i className="l0" />
+          <i className="l1" />
+          <i className="l2" />
+          <i className="l3" />
+          <i className="l4" /> more
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function Now() {
+  const [gh, setGh] = useState<GitHubData | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    loadGitHub()
+      .then((d) => alive && setGh(d))
+      .catch(() => alive && setFailed(true));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return (
+    <section id="now" className="section">
+      <SectionHead index={sectionNumber("now")} eyebrow="Now" title={<>What I'm <span className="grad">up to</span></>}>
+        The latest, plus my public GitHub activity, pulled live.
+      </SectionHead>
+      <div className="now-grid">
+        <Spotlight className="now-card">
+          <span className="badge">
+            <i />
+            Updated {new Date().toLocaleString("en", { month: "long", year: "numeric" })}
+          </span>
+          <ul className="now-list">
+            {profile.now.map((n) => (
+              <li key={n.label}>
+                <span className="mono">{n.label}</span>
+                <p>{n.text}</p>
+              </li>
+            ))}
+          </ul>
+        </Spotlight>
+
+        <Spotlight className="gh-card">
+          <div className="gh-head">
+            <span className="gh-logo" aria-hidden="true">
+              <SocialIcon name="GitHub" />
+            </span>
+            <div>
+              <strong>@{GH_USER}</strong>
+              <span>{gh ? `${gh.repos} public repositories` : failed ? "Live data unavailable right now" : "Loading live data…"}</span>
+            </div>
+            <a className="link" href={profile.github} target="_blank" rel="noreferrer">
+              Profile <External />
+            </a>
+          </div>
+          {gh ? (
+            <>
+              <Heatmap days={gh.days} />
+              <ul className="gh-repos">
+                {gh.recent.map((r) => (
+                  <li key={r.url}>
+                    <a href={r.url} target="_blank" rel="noreferrer">
+                      <strong>{r.name}</strong>
+                      {r.description ? <span>{r.description}</span> : null}
+                    </a>
+                    <em className="mono">
+                      {r.language ? <b>{r.language}</b> : null}
+                      {timeAgo(r.pushed)}
+                    </em>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : failed ? (
+            <p className="gh-fail">
+              GitHub's API didn't respond.{" "}
+              <a href={profile.github} target="_blank" rel="noreferrer">
+                See my activity on GitHub <External />
+              </a>
+            </p>
+          ) : (
+            <div className="gh-skeleton" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+            </div>
+          )}
+        </Spotlight>
+      </div>
+    </section>
+  );
+}
+
 function Timeline({ items }: { items: TimelineItem[] }) {
   return (
     <ol className="timeline">
@@ -994,7 +1486,7 @@ function Experience() {
   if (!profile.experience.length) return null;
   return (
     <section id="experience" className="section">
-      <SectionHead index={4} eyebrow="Experience" title={<>Hackathons &amp; <span className="grad">leadership</span></>} />
+      <SectionHead index={sectionNumber("experience")} eyebrow="Experience" title={<>Hackathons &amp; <span className="grad">leadership</span></>} />
       <Timeline items={profile.experience} />
     </section>
   );
@@ -1004,7 +1496,7 @@ function Education() {
   if (!profile.education.length) return null;
   return (
     <section id="education" className="section">
-      <SectionHead index={5} eyebrow="Education" title={<>Where I'm <span className="grad">learning</span></>} />
+      <SectionHead index={sectionNumber("education")} eyebrow="Education" title={<>Where I'm <span className="grad">learning</span></>} />
       <div className="edu">
         {profile.education.map((e) => (
           <Spotlight key={e.title} className="edu-card">
@@ -1059,7 +1551,7 @@ function Contact() {
       <div className="contact" data-reveal>
         <div className="contact-glow" aria-hidden="true" />
         <span className="eyebrow">
-          <b>06</b>Contact
+          <b>{String(sectionNumber("contact")).padStart(2, "0")}</b>Contact
         </span>
         <h2>
           Let's build something <span className="grad">great together.</span>
@@ -1095,6 +1587,26 @@ function Contact() {
 export default function App() {
   useReveal();
   const { progress, active, scrolled } = useScrollSpy();
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const closePalette = useCallback(() => setPaletteOpen(false), []);
+  const closeAI = useCallback(() => setAiOpen(false), []);
+  const openAI = useCallback(() => {
+    setPaletteOpen(false);
+    setAiOpen(true);
+  }, []);
+
+  // ⌘K / Ctrl K toggles the command menu from anywhere.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
     <>
@@ -1111,7 +1623,7 @@ export default function App() {
       <NeuralBackground />
       <CursorGlow />
 
-      <Nav active={active} progress={progress} scrolled={scrolled} />
+      <Nav active={active} progress={progress} scrolled={scrolled} onPalette={() => setPaletteOpen(true)} />
 
       <main id="top">
         <Hero />
@@ -1120,6 +1632,7 @@ export default function App() {
         <About />
         <Skills />
         <Projects />
+        <Now />
         <Experience />
         <Education />
         <Contact />
@@ -1142,6 +1655,19 @@ export default function App() {
       </footer>
 
       <BackToTop progress={progress} />
+
+      {aiOpen ? null : (
+        <button type="button" className="ai-launch" onClick={() => setAiOpen(true)} aria-haspopup="dialog">
+          <span className="ai-ring always" aria-hidden="true" />
+          <span className="spark" aria-hidden="true">
+            ✦
+          </span>
+          Ask my AI
+        </button>
+      )}
+      <AskAI open={aiOpen} onClose={closeAI} />
+      <CommandPalette open={paletteOpen} onClose={closePalette} onAsk={openAI} />
+      <Analytics />
     </>
   );
 }

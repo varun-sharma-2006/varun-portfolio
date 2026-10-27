@@ -49,6 +49,13 @@ export const profile = {
       "Each project below is live, tested and measured, including the numbers that didn't flatter it.",
   ],
 
+  // "Now": what I'm up to lately. Keep it current.
+  now: [
+    { label: "Latest ship", text: "BidPulse, a real-time British-auction RFQ platform (Oct 2026)" },
+    { label: "Exploring", text: "AI agents with deterministic guardrails and honest evaluation" },
+    { label: "Looking for", text: "Summer 2027 internships in software engineering, applied AI or fintech" },
+  ],
+
   values: [
     { title: "End-to-end ownership", body: "From the schema and API to the interface, CI and deployment. I like owning the whole thing." },
     { title: "Honest results", body: "Out-of-sample tests, baselines and ablations, so the numbers mean something." },
@@ -91,6 +98,7 @@ export interface FeaturedProjectData {
   name: string;
   category: string;
   tagline: string;
+  highlight: string; // one key result, shown on the project card
   summary: string;
   event?: string;
   cover: string; // card image in the projects overview
@@ -110,12 +118,13 @@ export const algoTrade: FeaturedProjectData = {
   name: "Algo Trade Simulator",
   category: "Fintech",
   tagline: "A trading lab that tells you the truth about your strategy.",
+  highlight: "A tuned strategy that looked like +24% a year made +11% on unseen data, and the app says so.",
   summary:
     "Backtest trading strategies on real market data with fees and slippage, compare every result with buy & hold " +
     "and the S&P 500 on return and risk, check whether tuned settings survive with walk-forward testing, try a " +
     "machine-learning strategy trained only on the past, design your own rules, run backdated paper portfolios, " +
     "and ask an AI copilot that runs all of it for you.",
-  cover: "/algotrade/dashboard.png",
+  cover: "/algotrade/dashboard.webp",
   links: [
     { label: "Open live demo", href: "https://algo-trade-mu.vercel.app" },
     { label: "View source", href: "https://github.com/varun-sharma-2006/AlgoTrade" },
@@ -160,17 +169,17 @@ export const algoTrade: FeaturedProjectData = {
     },
   ],
 
-  video: { src: "/algotrade/demo.mp4", poster: "/algotrade/demo-poster.png", length: "2 min" },
+  video: { src: "/algotrade/demo.mp4", poster: "/algotrade/demo-poster.webp", length: "2 min" },
 
   gallery: [
-    { id: "overview", label: "Overview", title: "Dashboard", caption: "Portfolio stats, watchlist sparklines and recent simulations at a glance.", image: "/algotrade/dashboard.png" },
-    { id: "lab", label: "Strategy lab", title: "Risk analytics", caption: "Growth and drawdown charts, and risk vs buy & hold and the S&P 500, fees and slippage included.", image: "/algotrade/strategy-lab.png" },
-    { id: "walk-forward", label: "Walk-forward", title: "Walk-forward test", caption: "Tuned vs out-of-sample returns, quarter by quarter, on data the settings never saw.", image: "/algotrade/walk-forward.png" },
-    { id: "ml", label: "ML model", title: "Machine-learning strategy", caption: "Out-of-sample accuracy vs an always-up baseline, ROC-AUC and what the model weighs.", image: "/algotrade/ml-strategy.png" },
-    { id: "portfolio", label: "Portfolio", title: "Paper portfolio", caption: "Value over time, allocation, and every position's P&L against buy & hold.", image: "/algotrade/portfolio.png" },
-    { id: "builder", label: "Builder", title: "Strategy Builder", caption: "Design rules, see them in plain English, backtest on 2 years of data and save.", image: "/algotrade/builder.png" },
-    { id: "copilot", label: "Copilot", title: "AI copilot with actions", caption: "Ask it to compare strategies and it runs the backtests, then explains the results.", image: "/algotrade/copilot-actions.png" },
-    { id: "markets", label: "Markets", title: "Live markets", caption: "Search any ticker and study its candles across ranges.", image: "/algotrade/live-data.png" },
+    { id: "overview", label: "Overview", title: "Dashboard", caption: "Portfolio stats, watchlist sparklines and recent simulations at a glance.", image: "/algotrade/dashboard.webp" },
+    { id: "lab", label: "Strategy lab", title: "Risk analytics", caption: "Growth and drawdown charts, and risk vs buy & hold and the S&P 500, fees and slippage included.", image: "/algotrade/strategy-lab.webp" },
+    { id: "walk-forward", label: "Walk-forward", title: "Walk-forward test", caption: "Tuned vs out-of-sample returns, quarter by quarter, on data the settings never saw.", image: "/algotrade/walk-forward.webp" },
+    { id: "ml", label: "ML model", title: "Machine-learning strategy", caption: "Out-of-sample accuracy vs an always-up baseline, ROC-AUC and what the model weighs.", image: "/algotrade/ml-strategy.webp" },
+    { id: "portfolio", label: "Portfolio", title: "Paper portfolio", caption: "Value over time, allocation, and every position's P&L against buy & hold.", image: "/algotrade/portfolio.webp" },
+    { id: "builder", label: "Builder", title: "Strategy Builder", caption: "Design rules, see them in plain English, backtest on 2 years of data and save.", image: "/algotrade/builder.webp" },
+    { id: "copilot", label: "Copilot", title: "AI copilot with actions", caption: "Ask it to compare strategies and it runs the backtests, then explains the results.", image: "/algotrade/copilot-actions.webp" },
+    { id: "markets", label: "Markets", title: "Live markets", caption: "Search any ticker and study its candles across ranges.", image: "/algotrade/live-data.webp" },
   ],
 
   engineering: [
@@ -189,12 +198,13 @@ export const freightAudit: FeaturedProjectData = {
   name: "Freight Invoice Auditor",
   category: "Applied AI",
   tagline: "An AI auditor that catches carrier overcharges, and proves every claim before a person sends it.",
+  highlight: "100% precision on unseen invoices, vs 51.9% when the LLM judges on its own.",
   summary:
     "Carriers bill shippers with invoices full of line items, and they often don't match the contract. This agent " +
     "reads a carrier's invoice PDF, checks every line against the contracted rate sheet, flags overcharges with the " +
     "exact contract clause and invoice line as evidence, and drafts a dispute that a signed-in reviewer must approve " +
     "before anything is sent.",
-  cover: "/freight/dashboard.png",
+  cover: "/freight/dashboard.webp",
   links: [
     { label: "Open live demo", href: "https://freight-invoice-auditing-agent.vercel.app" },
     { label: "View source", href: "https://github.com/varun-sharma-2006/Freight-Invoice-Auditing-Agent" },
@@ -238,13 +248,13 @@ export const freightAudit: FeaturedProjectData = {
   ],
 
   gallery: [
-    { id: "signin", label: "Sign in", title: "Reviewer sign-in", caption: "Signed, expiring sessions. Every API route requires them, and evaluators get one-click demo access.", image: "/freight/login.png" },
-    { id: "dashboard", label: "Dashboard", title: "Audit workspace", caption: "Overcharges found, invoices needing review and disputes at a glance, with drag-and-drop upload and the carrier contracts on file.", image: "/freight/dashboard.png" },
-    { id: "review", label: "Review", title: "Invoice review", caption: "Every extracted field and line, each charge mapped to a standard type, with the flagged lines highlighted.", image: "/freight/review.png" },
-    { id: "findings", label: "Evidence", title: "Findings with evidence", caption: "An expired rate and miscalculated detention, each with the invoice line and the contract clause side by side.", image: "/freight/findings.png" },
-    { id: "dispute", label: "Approval", title: "Approval-gated dispute", caption: "A drafted dispute email the reviewer can edit, approve or reject. Sending stays locked until a signed-in reviewer approves.", image: "/freight/dispute.png" },
-    { id: "audit", label: "Audit trail", title: "Tamper-evident log", caption: "Every upload, extraction, audit and approval, each event chained to the previous one by SHA-256.", image: "/freight/audit.png" },
-    { id: "eval", label: "Evaluation", title: "Measured accuracy", caption: "The hybrid against an LLM-only baseline on the same unseen invoices: 100% vs 51.9% precision, per error type.", image: "/freight/eval.png" },
+    { id: "signin", label: "Sign in", title: "Reviewer sign-in", caption: "Signed, expiring sessions. Every API route requires them, and evaluators get one-click demo access.", image: "/freight/login.webp" },
+    { id: "dashboard", label: "Dashboard", title: "Audit workspace", caption: "Overcharges found, invoices needing review and disputes at a glance, with drag-and-drop upload and the carrier contracts on file.", image: "/freight/dashboard.webp" },
+    { id: "review", label: "Review", title: "Invoice review", caption: "Every extracted field and line, each charge mapped to a standard type, with the flagged lines highlighted.", image: "/freight/review.webp" },
+    { id: "findings", label: "Evidence", title: "Findings with evidence", caption: "An expired rate and miscalculated detention, each with the invoice line and the contract clause side by side.", image: "/freight/findings.webp" },
+    { id: "dispute", label: "Approval", title: "Approval-gated dispute", caption: "A drafted dispute email the reviewer can edit, approve or reject. Sending stays locked until a signed-in reviewer approves.", image: "/freight/dispute.webp" },
+    { id: "audit", label: "Audit trail", title: "Tamper-evident log", caption: "Every upload, extraction, audit and approval, each event chained to the previous one by SHA-256.", image: "/freight/audit.webp" },
+    { id: "eval", label: "Evaluation", title: "Measured accuracy", caption: "The hybrid against an LLM-only baseline on the same unseen invoices: 100% vs 51.9% precision, per error type.", image: "/freight/eval.webp" },
   ],
 
   engineering: [
@@ -262,13 +272,14 @@ export const razorGrowth: FeaturedProjectData = {
   name: "RazorGrowth",
   category: "AI agents · Payments",
   tagline: "An AI agent that wins back failed payments, without ever holding the purse strings.",
+  highlight: "Beats a heuristic baseline by 2.3% on revenue recovered beyond what would have come back anyway.",
   summary:
     "Failed payments quietly cost merchants revenue. RazorGrowth is an AI agent that investigates them with read-only tools and proposes " +
     "Razorpay recovery campaigns, but it can't spend a rupee on its own: every proposal passes a deterministic " +
     "policy engine and needs the merchant's explicit approval, and every step is audited. To let anyone try it, " +
     "it ships as a live simulator: run a store for a week, command the agent, and compete on a weekly leaderboard.",
   event: "Razorpay AI Buildathon 2026",
-  cover: "/razorgrowth/dashboard.png",
+  cover: "/razorgrowth/dashboard.webp",
   links: [
     { label: "Open live demo", href: "https://razorgrowth.vercel.app" },
     { label: "View source", href: "https://github.com/varun-sharma-2006/Razorgrowth" },
@@ -312,14 +323,14 @@ export const razorGrowth: FeaturedProjectData = {
   ],
 
   gallery: [
-    { id: "signin", label: "Sign in", title: "Sign in with Google", caption: "A live recovery feed tells the story: a payment fails, the agent proposes, policy passes, you approve, the customer pays.", image: "/razorgrowth/login.png" },
-    { id: "scenarios", label: "Scenarios", title: "Pick a week", caption: "Five scenarios, from a steady week to a UPI outage. Everyone gets the same customers each week, so the leaderboard is fair.", image: "/razorgrowth/new-run.png" },
-    { id: "dashboard", label: "Dashboard", title: "Mission control", caption: "Score, incentive wallet and recovery figures update every simulated hour, driven from a media-player style dock.", image: "/razorgrowth/dashboard.png" },
-    { id: "charts", label: "Live charts", title: "You vs doing nothing", caption: "Recovered revenue against what would have come back anyway, and failures by payment method with market events.", image: "/razorgrowth/charts.png" },
-    { id: "approval", label: "Approval", title: "Permissioned approval", caption: "The agent's investigation, step by step: which tool it called, why, and what it found. Then the policy checklist and your decision.", image: "/razorgrowth/approval.png" },
-    { id: "campaigns", label: "Campaigns", title: "Recovery links", caption: "One Razorpay Payment Link per failed payment, each with its share of the incentive and its outcome.", image: "/razorgrowth/campaigns.png" },
-    { id: "lab", label: "Safety lab", title: "Fault injection", caption: "Policy block, gateway timeouts with safe halt, and a lost response recovered without a duplicate link.", image: "/razorgrowth/safety-lab.png" },
-    { id: "results", label: "Results", title: "End of the week", caption: "The score breakdown, return on incentive, and a submission to the weekly leaderboard.", image: "/razorgrowth/results.png" },
+    { id: "signin", label: "Sign in", title: "Sign in with Google", caption: "A live recovery feed tells the story: a payment fails, the agent proposes, policy passes, you approve, the customer pays.", image: "/razorgrowth/login.webp" },
+    { id: "scenarios", label: "Scenarios", title: "Pick a week", caption: "Five scenarios, from a steady week to a UPI outage. Everyone gets the same customers each week, so the leaderboard is fair.", image: "/razorgrowth/new-run.webp" },
+    { id: "dashboard", label: "Dashboard", title: "Mission control", caption: "Score, incentive wallet and recovery figures update every simulated hour, driven from a media-player style dock.", image: "/razorgrowth/dashboard.webp" },
+    { id: "charts", label: "Live charts", title: "You vs doing nothing", caption: "Recovered revenue against what would have come back anyway, and failures by payment method with market events.", image: "/razorgrowth/charts.webp" },
+    { id: "approval", label: "Approval", title: "Permissioned approval", caption: "The agent's investigation, step by step: which tool it called, why, and what it found. Then the policy checklist and your decision.", image: "/razorgrowth/approval.webp" },
+    { id: "campaigns", label: "Campaigns", title: "Recovery links", caption: "One Razorpay Payment Link per failed payment, each with its share of the incentive and its outcome.", image: "/razorgrowth/campaigns.webp" },
+    { id: "lab", label: "Safety lab", title: "Fault injection", caption: "Policy block, gateway timeouts with safe halt, and a lost response recovered without a duplicate link.", image: "/razorgrowth/safety-lab.webp" },
+    { id: "results", label: "Results", title: "End of the week", caption: "The score breakdown, return on incentive, and a submission to the weekly leaderboard.", image: "/razorgrowth/results.webp" },
   ],
 
   engineering: [
@@ -338,11 +349,12 @@ export const bidPulse: FeaturedProjectData = {
   name: "BidPulse",
   category: "Real-time systems",
   tagline: "A freight RFQ platform with British-auction bidding that stays fair down to the last second.",
+  highlight: "8 simultaneous last-second bids produce exactly 5 chained extensions, never past the forced close.",
   summary:
     "Buyers post a Request for Quotation; carriers openly undercut each other in a live British auction. A bid near " +
     "the end extends the auction automatically, but it can never run past the forced close. Ranks, prices and the " +
     "reason for every extension update live on every screen, with separate buyer and supplier dashboards.",
-  cover: "/bidpulse/buyer-dashboard.png",
+  cover: "/bidpulse/buyer-dashboard.webp",
   links: [
     { label: "Open live demo", href: "https://britishauctionrfq.vercel.app" },
     { label: "View source", href: "https://github.com/varun-sharma-2006/British-Auction-in-RFQ-System" },
@@ -384,13 +396,13 @@ export const bidPulse: FeaturedProjectData = {
   ],
 
   gallery: [
-    { id: "signin", label: "Sign in", title: "One-click demo accounts", caption: "Sign in as the buyer or one of the carriers; open two browsers to watch bids land live.", image: "/bidpulse/login.png" },
-    { id: "buyer", label: "Buyer", title: "Buyer dashboard", caption: "Live auctions, bids received, money saved by competition, and recent activity across every RFQ.", image: "/bidpulse/buyer-dashboard.png" },
-    { id: "listing", label: "Auctions", title: "All auctions", caption: "Current lowest bid, live countdowns, extension counts and Active / Closed / Force Closed status.", image: "/bidpulse/listing.png" },
-    { id: "live", label: "Live auction", title: "A live auction", caption: "A timeline of the trigger window and extensions, supplier ranking L1/L2, and a bid form that predicts whether a bid will extend the auction.", image: "/bidpulse/live-auction.png" },
-    { id: "details", label: "Activity log", title: "Every extension explained", caption: "Each extension logs the old and new close time and a readable reason.", image: "/bidpulse/details.png" },
-    { id: "supplier", label: "Supplier", title: "Supplier dashboard", caption: "My rank, my quote vs L1, and an outbid banner with a one-click lower quote.", image: "/bidpulse/supplier-dashboard.png" },
-    { id: "create", label: "Create RFQ", title: "Create an RFQ", caption: "Bid window, forced close, trigger window X, extension Y and the trigger type, validated on client, server and database.", image: "/bidpulse/create-rfq.png" },
+    { id: "signin", label: "Sign in", title: "One-click demo accounts", caption: "Sign in as the buyer or one of the carriers; open two browsers to watch bids land live.", image: "/bidpulse/login.webp" },
+    { id: "buyer", label: "Buyer", title: "Buyer dashboard", caption: "Live auctions, bids received, money saved by competition, and recent activity across every RFQ.", image: "/bidpulse/buyer-dashboard.webp" },
+    { id: "listing", label: "Auctions", title: "All auctions", caption: "Current lowest bid, live countdowns, extension counts and Active / Closed / Force Closed status.", image: "/bidpulse/listing.webp" },
+    { id: "live", label: "Live auction", title: "A live auction", caption: "A timeline of the trigger window and extensions, supplier ranking L1/L2, and a bid form that predicts whether a bid will extend the auction.", image: "/bidpulse/live-auction.webp" },
+    { id: "details", label: "Activity log", title: "Every extension explained", caption: "Each extension logs the old and new close time and a readable reason.", image: "/bidpulse/details.webp" },
+    { id: "supplier", label: "Supplier", title: "Supplier dashboard", caption: "My rank, my quote vs L1, and an outbid banner with a one-click lower quote.", image: "/bidpulse/supplier-dashboard.webp" },
+    { id: "create", label: "Create RFQ", title: "Create an RFQ", caption: "Bid window, forced close, trigger window X, extension Y and the trigger type, validated on client, server and database.", image: "/bidpulse/create-rfq.webp" },
   ],
 
   engineering: [
