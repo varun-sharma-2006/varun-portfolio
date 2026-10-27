@@ -198,17 +198,225 @@ function useScrollSpy() {
   return state;
 }
 
+const prefersReducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+
+/** A slowly drifting neural-network constellation behind the page; nodes link up near the cursor. */
+function NeuralBackground() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+    const reduce = prefersReducedMotion();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const mouse = { x: -1e4, y: -1e4 };
+    let w = 0;
+    let h = 0;
+    let frame = 0;
+    let nodes: { x: number; y: number; vx: number; vy: number; r: number }[] = [];
+
+    const resize = () => {
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const count = Math.round(Math.min(95, (w * h) / 15000));
+      nodes = Array.from({ length: count }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.28,
+        vy: (Math.random() - 0.5) * 0.28,
+        r: Math.random() * 1.4 + 0.6,
+      }));
+    };
+
+    const draw = () => {
+      ctx.clearRect(0, 0, w, h);
+      for (const n of nodes) {
+        if (!reduce) {
+          n.x += n.vx;
+          n.y += n.vy;
+          if (n.x < -20) n.x = w + 20;
+          if (n.x > w + 20) n.x = -20;
+          if (n.y < -20) n.y = h + 20;
+          if (n.y > h + 20) n.y = -20;
+        }
+      }
+      const link = 140;
+      for (let i = 0; i < nodes.length; i++) {
+        const a = nodes[i];
+        for (let j = i + 1; j < nodes.length; j++) {
+          const b = nodes[j];
+          const d = Math.hypot(a.x - b.x, a.y - b.y);
+          if (d < link) {
+            ctx.strokeStyle = `rgba(140, 150, 255, ${(1 - d / link) * 0.22})`;
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+        const dm = Math.hypot(a.x - mouse.x, a.y - mouse.y);
+        if (dm < 200) {
+          ctx.strokeStyle = `rgba(34, 211, 238, ${(1 - dm / 200) * 0.5})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(mouse.x, mouse.y);
+          ctx.stroke();
+        }
+        ctx.fillStyle = dm < 200 ? "rgba(165, 243, 252, 0.95)" : "rgba(196, 181, 253, 0.7)";
+        ctx.beginPath();
+        ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (!reduce && !document.hidden) frame = requestAnimationFrame(draw);
+    };
+
+    const onMove = (e: PointerEvent) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      if (reduce) draw();
+    };
+    const onVisible = () => {
+      cancelAnimationFrame(frame);
+      if (!document.hidden) draw();
+    };
+    const onResize = () => {
+      resize();
+      if (reduce) draw();
+    };
+
+    resize();
+    draw();
+    window.addEventListener("resize", onResize);
+    window.addEventListener("pointermove", onMove, { passive: true });
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("pointermove", onMove);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
+  return <canvas className="neural" ref={ref} aria-hidden="true" />;
+}
+
+/** A soft glow that follows the mouse (pointer devices only). */
+function CursorGlow() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!window.matchMedia?.("(pointer: fine)").matches) return;
+    const onMove = (e: PointerEvent) => {
+      ref.current?.style.setProperty("transform", `translate(${e.clientX}px, ${e.clientY}px)`);
+      ref.current?.classList.add("on");
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => window.removeEventListener("pointermove", onMove);
+  }, []);
+  return <div className="cursor-glow" ref={ref} aria-hidden="true" />;
+}
+
+/** Types each phrase, pauses, deletes it and moves to the next. */
+function Typewriter({ words }: { words: string[] }) {
+  const [index, setIndex] = useState(0);
+  const [length, setLength] = useState(0);
+  const [deleting, setDeleting] = useState(false);
+  useEffect(() => {
+    if (prefersReducedMotion()) {
+      setLength(words[index].length);
+      return;
+    }
+    const word = words[index];
+    let t: number;
+    if (!deleting && length < word.length) t = window.setTimeout(() => setLength(length + 1), 55);
+    else if (!deleting) t = window.setTimeout(() => setDeleting(true), 1700);
+    else if (length > 0) t = window.setTimeout(() => setLength(length - 1), 26);
+    else
+      t = window.setTimeout(() => {
+        setDeleting(false);
+        setIndex((index + 1) % words.length);
+      }, 250);
+    return () => clearTimeout(t);
+  }, [length, deleting, index, words]);
+  return (
+    <span className="typed" aria-live="off">
+      <span className="grad">{words[index].slice(0, length)}</span>
+      <i className="type-caret" aria-hidden="true" />
+    </span>
+  );
+}
+
+const TYPED = ["AI agents with guardrails", "LLM pipelines that cite evidence", "honest fintech tools", "real-time auction systems"];
+
+/** Every technology across the projects, scrolling past in a loop. */
+function StackMarquee() {
+  const stack = Array.from(new Set(projects.flatMap((p) => p.stack)));
+  return (
+    <div className="marquee" aria-label={`Technologies: ${stack.join(", ")}`}>
+      <div className="marquee-track" aria-hidden="true">
+        {[...stack, ...stack].map((s, i) => (
+          <span key={`${s}-${i}`}>
+            <i>✦</i>
+            {s}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ---------- Top bar ---------- */
+
+function Chevron() {
+  return (
+    <svg className="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+/** The panel that opens from "Projects" in the top bar: jump straight to any case study. */
+function ProjectsMenu({ onPick }: { onPick: () => void }) {
+  return (
+    <div className="proj-menu" id="projects-menu" role="menu" aria-label="Projects">
+      <span className="mono proj-menu-title">Jump to a project</span>
+      {projects.map((p, i) => (
+        <a key={p.id} href={`#${p.id}`} role="menuitem" className="proj-item" onClick={onPick}>
+          <span className="proj-thumb">
+            <img src={p.cover} alt="" loading="lazy" />
+          </span>
+          <span className="proj-text">
+            <strong>
+              <em className="mono">0{i + 1}</em>
+              {p.name}
+            </strong>
+            <span>{p.category}</span>
+          </span>
+          <Arrow />
+        </a>
+      ))}
+      <a href="#projects" role="menuitem" className="proj-all" onClick={onPick}>
+        See all projects side by side
+        <Arrow down />
+      </a>
+    </div>
+  );
+}
 
 function Nav({ active, progress, scrolled }: { active: string; progress: number; scrolled: boolean }) {
   const [open, setOpen] = useState(false);
+  const [projOpen, setProjOpen] = useState(false);
   const linksRef = useRef<HTMLDivElement>(null);
+  const projRef = useRef<HTMLDivElement>(null);
   const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
 
   // Slide the highlight pill under the active link.
   useLayoutEffect(() => {
     const measure = () => {
-      const el = linksRef.current?.querySelector<HTMLAnchorElement>(`a[href="#${active}"]`);
+      const el = linksRef.current?.querySelector<HTMLElement>(`[data-section="${active}"]`);
       setPill(el ? { left: el.offsetLeft, width: el.offsetWidth } : null);
     };
     measure();
@@ -217,11 +425,23 @@ function Nav({ active, progress, scrolled }: { active: string; progress: number;
   }, [active]);
 
   useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    if (!open && !projOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        setProjOpen(false);
+      }
+    };
+    const onDown = (e: PointerEvent) => {
+      if (projOpen && !projRef.current?.contains(e.target as Node)) setProjOpen(false);
+    };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+    window.addEventListener("pointerdown", onDown);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onDown);
+    };
+  }, [open, projOpen]);
 
   return (
     <header className={`nav${scrolled ? " scrolled" : ""}${open ? " open" : ""}`}>
@@ -236,17 +456,40 @@ function Nav({ active, progress, scrolled }: { active: string; progress: number;
 
         <nav className="nav-links" ref={linksRef} aria-label="Sections">
           {pill ? <i className="nav-pill" style={{ transform: `translateX(${pill.left}px)`, width: pill.width }} aria-hidden="true" /> : null}
-          {SECTIONS.map((s) => (
-            <a key={s.id} href={`#${s.id}`} className={active === s.id ? "active" : undefined} aria-current={active === s.id ? "true" : undefined}>
-              {s.label}
-            </a>
-          ))}
+          {SECTIONS.map((s) =>
+            s.id === "projects" ? (
+              <div key={s.id} className="nav-drop" ref={projRef} data-section={s.id}>
+                <button
+                  type="button"
+                  className={`nav-link${active === s.id ? " active" : ""}${projOpen ? " expanded" : ""}`}
+                  aria-haspopup="menu"
+                  aria-expanded={projOpen}
+                  aria-controls="projects-menu"
+                  onClick={() => setProjOpen((v) => !v)}
+                >
+                  {s.label}
+                  <Chevron />
+                </button>
+                {projOpen ? <ProjectsMenu onPick={() => setProjOpen(false)} /> : null}
+              </div>
+            ) : (
+              <a
+                key={s.id}
+                href={`#${s.id}`}
+                data-section={s.id}
+                className={`nav-link${active === s.id ? " active" : ""}`}
+                aria-current={active === s.id ? "true" : undefined}
+              >
+                {s.label}
+              </a>
+            ),
+          )}
         </nav>
 
         <div className="nav-actions">
           {profile.resume ? (
             <a className="btn btn-small" href={profile.resume} target="_blank" rel="noreferrer">
-              Résumé
+              Resume
             </a>
           ) : null}
           <button type="button" className="menu-btn" aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} aria-controls="mobile-menu" onClick={() => setOpen((v) => !v)}>
@@ -259,10 +502,22 @@ function Nav({ active, progress, scrolled }: { active: string; progress: number;
 
       <nav id="mobile-menu" className="mobile-menu" aria-label="Sections" hidden={!open}>
         {SECTIONS.map((s, i) => (
-          <a key={s.id} href={`#${s.id}`} className={active === s.id ? "active" : undefined} onClick={() => setOpen(false)}>
-            <span className="mono">{String(i + 1).padStart(2, "0")}</span>
-            {s.label}
-          </a>
+          <div key={s.id} className="mobile-group">
+            <a href={`#${s.id}`} className={active === s.id ? "active" : undefined} onClick={() => setOpen(false)}>
+              <span className="mono">{String(i + 1).padStart(2, "0")}</span>
+              {s.label}
+            </a>
+            {s.id === "projects" ? (
+              <div className="mobile-sub">
+                {projects.map((p) => (
+                  <a key={p.id} href={`#${p.id}`} onClick={() => setOpen(false)}>
+                    <img src={p.cover} alt="" loading="lazy" />
+                    {p.name}
+                  </a>
+                ))}
+              </div>
+            ) : null}
+          </div>
         ))}
       </nav>
     </header>
@@ -316,6 +571,12 @@ function Hero() {
             </>
           ) : null}
         </h1>
+        <p className="typeline">
+          <span className="spark" aria-hidden="true">
+            ✦
+          </span>
+          Shipping <Typewriter words={TYPED} />
+        </p>
         <p className="lead">{profile.intro}</p>
         <div className="cta-row">
           <a className="btn btn-primary" href="#projects">
@@ -339,6 +600,7 @@ function Hero() {
 
       <div className="hero-visual" data-reveal>
         <div className="editor">
+          <span className="ai-ring always" aria-hidden="true" />
           <div className="editor-bar">
             <span />
             <span />
@@ -356,6 +618,7 @@ function Hero() {
               <span className="p">graduating</span>: <span className="n">{profile.graduation}</span>,{"\n  "}
               <span className="p">based</span>: <span className="s">"{profile.location.split(",")[0]}"</span>,{"\n  "}
               <span className="p">stack</span>: [<span className="s">"Python"</span>, <span className="s">"FastAPI"</span>, <span className="s">"React"</span>, <span className="s">"TS"</span>],{"\n  "}
+              <span className="p">building</span>: [<span className="s">"AI agents"</span>, <span className="s">"fintech"</span>],{"\n  "}
               <span className="p">shipped</span>: <span className="n">{projects.length}</span>, <span className="c">{"// live, tested, measured"}</span>
               {"\n  "}
               <span className="p">openTo</span>: <span className="s">"Summer 2027 internships"</span>,{"\n"}
@@ -516,6 +779,7 @@ function ProjectCard({ p, index }: { p: FeaturedProjectData; index: number }) {
   const live = p.links[0];
   return (
     <Spotlight className="project-card">
+      <span className="ai-ring" aria-hidden="true" />
       <a href={`#${p.id}`} className="project-cover" aria-label={`Read the ${p.name} case study`}>
         <img src={p.cover} alt="" loading="lazy" />
       </a>
@@ -664,7 +928,7 @@ function Projects() {
   return (
     <section id="projects" className="section">
       <SectionHead index={3} eyebrow="Projects" title={<>Selected <span className="grad">work</span></>}>
-        Three products, each live with real users in mind, automated tests and an honest evaluation. Pick one to read the full case study.
+        {projects.length} products, each live, tested and honestly evaluated. Pick one to read the full case study.
       </SectionHead>
       <div className="project-grid">
         {projects.map((p, i) => (
@@ -777,7 +1041,7 @@ function Contact() {
   const links = [
     profile.github && { label: "GitHub", href: profile.github },
     profile.linkedin && { label: "LinkedIn", href: profile.linkedin },
-    profile.resume && { label: "Résumé", href: profile.resume },
+    profile.resume && { label: "Resume", href: profile.resume },
   ].filter(Boolean) as Array<{ label: string; href: string }>;
 
   const copy = async () => {
@@ -841,13 +1105,17 @@ export default function App() {
         <span className="blob b1" />
         <span className="blob b2" />
         <span className="blob b3" />
+        <span className="blob b4" />
       </div>
       <div className="grid-bg" aria-hidden="true" />
+      <NeuralBackground />
+      <CursorGlow />
 
       <Nav active={active} progress={progress} scrolled={scrolled} />
 
       <main id="top">
         <Hero />
+        <StackMarquee />
         <Highlights />
         <About />
         <Skills />

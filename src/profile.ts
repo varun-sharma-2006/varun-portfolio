@@ -57,11 +57,11 @@ export const profile = {
 
   skills: [
     { group: "Languages", items: ["Python", "C++", "TypeScript", "JavaScript"] },
-    { group: "Backend", items: ["FastAPI", "REST APIs", "MongoDB", "SQLAlchemy & Alembic", "Pydantic"] },
+    { group: "Backend", items: ["FastAPI", "REST APIs & WebSockets", "PostgreSQL", "MongoDB", "Redis & Celery", "SQLAlchemy & Alembic", "Pydantic"] },
     { group: "Frontend", items: ["React", "Vite", "Tailwind CSS", "CSS & design systems", "Responsive UI"] },
     { group: "AI & ML", items: ["Machine learning", "Scikit-learn", "Pandas", "NumPy", "Gemini function calling", "AI agents with guardrails"] },
     { group: "Quant", items: ["Backtesting", "Risk analytics", "Walk-forward testing", "Time-series analysis"] },
-    { group: "Engineering", items: ["pytest & Vitest", "GitHub Actions CI", "Vercel", "Docker", "Google OAuth"] },
+    { group: "Engineering", items: ["pytest, Vitest & Playwright", "GitHub Actions CI", "Docker & nginx", "Vercel", "Google OAuth & JWT"] },
   ],
 
   education: [
@@ -82,7 +82,6 @@ export const profile = {
       details: "Built RazorGrowth on my own: a permissioned AI agent that recovers failed payments.",
     },
     { title: "Management Lead", place: "Sportikon 3.0", period: "2025" },
-    { title: "Peer Mentor", place: "DSA Summit", period: "2025" },
   ] as TimelineItem[],
 };
 
@@ -333,8 +332,79 @@ export const razorGrowth: FeaturedProjectData = {
   ],
 };
 
+/** BidPulse. Figures come from the project's README and test suite. */
+export const bidPulse: FeaturedProjectData = {
+  id: "bidpulse",
+  name: "BidPulse",
+  category: "Real-time systems",
+  tagline: "A freight RFQ platform with British-auction bidding that stays fair down to the last second.",
+  summary:
+    "Buyers post a Request for Quotation; carriers openly undercut each other in a live British auction. A bid near " +
+    "the end extends the auction automatically, but it can never run past the forced close. Ranks, prices and the " +
+    "reason for every extension update live on every screen, with separate buyer and supplier dashboards.",
+  cover: "/bidpulse/buyer-dashboard.png",
+  links: [
+    { label: "Open live demo", href: "https://britishauctionrfq.vercel.app" },
+    { label: "View source", href: "https://github.com/varun-sharma-2006/British-Auction-in-RFQ-System" },
+  ],
+  role: "Everything: auction engine, API, real-time layer, load-balanced deployment, interface and tests",
+  team: [{ name: "Varun Sharma", href: "https://github.com/varun-sharma-2006" }],
+  stack: ["Python", "FastAPI", "PostgreSQL", "SQLAlchemy", "Alembic", "Celery", "Redis", "WebSockets", "React", "TypeScript", "nginx", "Docker", "Playwright"],
+
+  stats: [
+    { value: 102, suffix: "", label: "Automated tests" },
+    { value: 96, suffix: "%", label: "Backend test coverage" },
+    { value: 3, suffix: "", label: "Load-balanced API replicas" },
+    { value: 0, suffix: "", label: "Auctions past forced close" },
+  ],
+
+  story: [
+    {
+      kicker: "The problem",
+      title: "Last-second bids break auctions",
+      body:
+        "In a reverse auction, the winning move is to bid at the final second so no one can respond. Extending the " +
+        "deadline fixes that, but done carelessly an auction never ends, or two simultaneous bids corrupt the close time.",
+    },
+    {
+      kicker: "The approach",
+      title: "A pure rules engine, locked rows",
+      body:
+        "Extension rules (any bid, any rank change, or a new lowest bidder within the trigger window) live in a pure, " +
+        "unit-tested engine. Every bid locks its RFQ row, and the forced close is enforced three times: in the " +
+        "engine, in the API, and as a database CHECK constraint.",
+    },
+    {
+      kicker: "The result",
+      title: "Proven under concurrency",
+      body:
+        "A PostgreSQL test fires 8 simultaneous last-second bids and asserts exactly 5 chained extensions ending at the " +
+        "forced close; it fails if the lock is removed. A bid on one API replica reaches a browser on another via Redis.",
+    },
+  ],
+
+  gallery: [
+    { id: "signin", label: "Sign in", title: "One-click demo accounts", caption: "Sign in as the buyer or one of the carriers; open two browsers to watch bids land live.", image: "/bidpulse/login.png" },
+    { id: "buyer", label: "Buyer", title: "Buyer dashboard", caption: "Live auctions, bids received, money saved by competition, and recent activity across every RFQ.", image: "/bidpulse/buyer-dashboard.png" },
+    { id: "listing", label: "Auctions", title: "All auctions", caption: "Current lowest bid, live countdowns, extension counts and Active / Closed / Force Closed status.", image: "/bidpulse/listing.png" },
+    { id: "live", label: "Live auction", title: "A live auction", caption: "A timeline of the trigger window and extensions, supplier ranking L1/L2, and a bid form that predicts whether a bid will extend the auction.", image: "/bidpulse/live-auction.png" },
+    { id: "details", label: "Activity log", title: "Every extension explained", caption: "Each extension logs the old and new close time and a readable reason.", image: "/bidpulse/details.png" },
+    { id: "supplier", label: "Supplier", title: "Supplier dashboard", caption: "My rank, my quote vs L1, and an outbid banner with a one-click lower quote.", image: "/bidpulse/supplier-dashboard.png" },
+    { id: "create", label: "Create RFQ", title: "Create an RFQ", caption: "Bid window, forced close, trigger window X, extension Y and the trigger type, validated on client, server and database.", image: "/bidpulse/create-rfq.png" },
+  ],
+
+  engineering: [
+    { icon: 3, title: "Forced close, enforced 3×", body: "The engine caps every extension, the API rejects late bids, and a database CHECK guarantees the close never passes the forced close." },
+    { icon: 4, title: "Proven concurrency safety", body: "Bids lock the RFQ row (SELECT … FOR UPDATE); a PostgreSQL test fires 8 simultaneous last-second bids to prove it." },
+    { icon: 1, title: "Load balanced, stateless", body: "nginx spreads traffic over 3 API replicas; JWT auth, Postgres row locks and Redis pub/sub mean no sticky sessions." },
+    { icon: 0, title: "Live everywhere", body: "WebSockets fan updates out to every replica through Redis; countdowns correct for client clock skew using server time." },
+    { icon: 2, title: "Bloom-filter availability", body: "Live \"is this taken?\" checks answer \"definitely free\" without a query; UNIQUE constraints stay the final authority." },
+    { icon: 5, title: "Tested at every layer", body: "76 backend tests (96% coverage), 26 frontend tests and a Playwright run through the load balancer in CI." },
+  ],
+};
+
 /** Projects in the order they appear on the page. */
-export const projects: FeaturedProjectData[] = [algoTrade, freightAudit, razorGrowth];
+export const projects: FeaturedProjectData[] = [algoTrade, freightAudit, razorGrowth, bidPulse];
 
 /**
  * Other GitHub projects, hidden until they get their own case study.
