@@ -35,7 +35,7 @@ Optional environment variables (Vercel → Project → Settings → Environment 
 | Variable | What it does |
 |---|---|
 | `GEMINI_API_KEY` | Turns on AI answers in "Ask my AI" ([`api/ask.ts`](api/ask.ts)). Without it, answers come offline from the best-matching passage. |
-| `GEMINI_MODEL` | Overrides the model (default `gemini-3.8-flash`). |
+| `GEMINI_MODEL` | Overrides the model (default `gemini-flash-latest`, Google's current Flash model). If "Ask my AI" answers offline, the `reason` field in the `/api/ask` response says why. |
 | `RESEND_API_KEY` | Lets the contact form send email via [Resend](https://resend.com) ([`api/contact.ts`](api/contact.ts)). Without it, the form opens the visitor's email app. |
 | `CONTACT_TO` / `CONTACT_FROM` | Where messages go (default: the email in `profile.ts`) and the sender (default: Resend's test sender, which only delivers to your Resend account's email). |
 | `GITHUB_TOKEN` | Raises GitHub's rate limit for the "Now" section ([`api/github.ts`](api/github.ts)). Read-only, no scopes needed. |

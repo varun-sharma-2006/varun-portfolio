@@ -58,6 +58,17 @@ describe("/api/ask", () => {
     expect(data.sources).toEqual(["razorgrowth"]);
   });
 
+  it("tries the next model when one isn't found, and says why it fell back", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "test-key");
+    vi.stubEnv("GEMINI_MODEL", "gemini-old");
+    const fetch = vi.fn(async () => new Response("", { status: 404 }));
+    vi.stubGlobal("fetch", fetch);
+    const data = await (await ask(post({ question: "Tell me about BidPulse" }, "10.0.0.6"))).json();
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(data.mode).toBe("offline");
+    expect(data.reason).toContain("gemini-flash-latest");
+  });
+
   it("rate-limits a flood of questions from one IP", async () => {
     let last = 200;
     for (let i = 0; i < 13; i++) last = (await ask(post({ question: "skills?" }, "10.0.0.99"))).status;

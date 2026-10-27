@@ -127,6 +127,7 @@ export interface AskAnswer {
   answer: string;
   sources: string[]; // section ids
   mode: "ai" | "offline";
+  reason?: string; // why /api/ask answered offline
 }
 
 /** Answer without a model: quote the best-matching passage. */

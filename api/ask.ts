@@ -1,7 +1,7 @@
 /**
  * "Ask my AI": answers questions about Varun from this site's content only, citing the sections it used.
  * Uses Gemini when GEMINI_API_KEY (or GOOGLE_API_KEY) is set in Vercel; otherwise, or if the model fails,
- * it answers offline from the best-matching passage. GEMINI_MODEL overrides the model.
+ * it answers offline from the best-matching passage, with a "reason" saying why. GEMINI_MODEL overrides the model.
  */
 import { offlineAnswer, passages, sources, type AskAnswer } from "../src/knowledge";
 
@@ -71,45 +71,60 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const key = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-  if (!key) return json(offlineAnswer(question));
+  if (!key) return json({ ...offlineAnswer(question), reason: "no-key" });
 
-  const model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+  // "gemini-flash-latest" always points at Google's current Flash model, so the default never goes stale.
+  const models = [...new Set([process.env.GEMINI_MODEL, "gemini-flash-latest"].filter((m): m is string => !!m))];
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 12000);
+  // Why we fell back, so a misconfigured key or model shows up in the response (never the key itself).
+  let reason = "gemini-error";
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-      method: "POST",
-      signal: controller.signal,
-      headers: { "content-type": "application/json", "x-goog-api-key": key },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: SYSTEM }] },
-        contents: [
-          ...history.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.text }] })),
-          { role: "user", parts: [{ text: question }] },
-        ],
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 500,
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: "OBJECT",
-            properties: { answer: { type: "STRING" }, sources: { type: "ARRAY", items: { type: "STRING" } } },
-            required: ["answer", "sources"],
+    for (const model of models) {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: "POST",
+        signal: controller.signal,
+        headers: { "content-type": "application/json", "x-goog-api-key": key },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: SYSTEM }] },
+          contents: [
+            ...history.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.text }] })),
+            { role: "user", parts: [{ text: question }] },
+          ],
+          generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: 500,
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "OBJECT",
+              properties: { answer: { type: "STRING" }, sources: { type: "ARRAY", items: { type: "STRING" } } },
+              required: ["answer", "sources"],
+            },
           },
-        },
-      }),
-    });
-    if (!res.ok) throw new Error(`Gemini ${res.status}`);
-    const data = await res.json();
-    const text: string = data?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "";
-    const parsed = JSON.parse(text) as { answer?: unknown; sources?: unknown };
-    const answer = String(parsed.answer ?? "").trim().slice(0, 1200);
-    if (!answer) throw new Error("Empty answer");
-    const cited = Array.isArray(parsed.sources) ? parsed.sources.map(String).filter((s) => s in sources) : [];
-    return json({ answer, sources: Array.from(new Set(cited)).slice(0, 3), mode: "ai" } satisfies AskAnswer);
-  } catch {
-    return json(offlineAnswer(question));
+        }),
+      });
+      if (res.status === 404) {
+        reason = `gemini-404 (model ${model} not found)`;
+        continue;
+      }
+      if (!res.ok) {
+        reason = `gemini-${res.status}`;
+        break;
+      }
+      reason = "gemini-bad-reply";
+      const data = await res.json();
+      const text: string = data?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "";
+      const parsed = JSON.parse(text) as { answer?: unknown; sources?: unknown };
+      const answer = String(parsed.answer ?? "").trim().slice(0, 1200);
+      if (!answer) throw new Error("Empty answer");
+      const cited = Array.isArray(parsed.sources) ? parsed.sources.map(String).filter((s) => s in sources) : [];
+      return json({ answer, sources: Array.from(new Set(cited)).slice(0, 3), mode: "ai" } satisfies AskAnswer);
+    }
+  } catch (e) {
+    if (controller.signal.aborted) reason = "gemini-timeout";
+    else if (reason === "gemini-error") reason = `gemini-error (${String(e).slice(0, 80)})`;
   } finally {
     clearTimeout(timer);
   }
+  return json({ ...offlineAnswer(question), reason });
 }
