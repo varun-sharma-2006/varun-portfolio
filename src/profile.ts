@@ -94,11 +94,11 @@ export const profile = {
     { name: "Problem Solving (Intermediate)", issuer: "HackerRank", platform: "HackerRank", kind: "Skill test", href: "https://www.hackerrank.com/certificates/937d4f6b16a3" },
     { name: "Problem Solving (Basic)", issuer: "HackerRank", platform: "HackerRank", kind: "Skill test", href: "https://www.hackerrank.com/certificates/50ee019d859a" },
     { name: "Automata and Computability", issuer: "BITS Pilani", platform: "Coursera", kind: "Course", href: "https://www.coursera.org/account/accomplishments/verify/U56H5FX4LOZA" },
-    { name: "The Bits and Bytes of Computer Networking", issuer: "Google", platform: "Coursera", kind: "Course", href: "https://coursera.org/share/a4360c146971895aa3fc9300c70d40f3" },
-    { name: "Operating Systems and You: Becoming a Power User", issuer: "Google", platform: "Coursera", kind: "Course", href: "https://coursera.org/share/53c895e106b67a3b400cecd500486952" },
-    { name: "Introduction to Microprocessors", issuer: "Arm", platform: "Coursera", kind: "Course", href: "https://coursera.org/share/0e744aedc28f50f72b6bbdb6d81e7a79" },
-    { name: "Entrepreneurship Strategy: From Ideation to Exit", issuer: "HEC Paris", platform: "Coursera", kind: "Course", href: "https://coursera.org/share/06f7a0a170b8747bcb2f34782e71b227" },
-    { name: "Ethics for Engineers: Patents, Copyrights & IPR", issuer: "", platform: "Coursera", kind: "Course", href: "https://coursera.org/share/a148fbddac18a3bffcb34b52146dd188" },
+    { name: "The Bits and Bytes of Computer Networking", issuer: "Google", platform: "Coursera", kind: "Course", href: "https://www.coursera.org/account/accomplishments/verify/WTFVNO5BEG5T" },
+    { name: "Operating Systems and You: Becoming a Power User", issuer: "Google", platform: "Coursera", kind: "Course", href: "https://www.coursera.org/account/accomplishments/verify/CZKMYRJEUM3D" },
+    { name: "Introduction to Microprocessors", issuer: "Arm", platform: "Coursera", kind: "Course", href: "https://www.coursera.org/account/accomplishments/verify/28ARB3MX3LRF" },
+    { name: "Entrepreneurship Strategy: From Ideation to Exit", issuer: "HEC Paris", platform: "Coursera", kind: "Course", href: "https://www.coursera.org/account/accomplishments/verify/6JCQYHLD5YUC" },
+    { name: "Ethics for Engineers: Patents, Copyrights & IPR", issuer: "", platform: "Coursera", kind: "Course", href: "https://www.coursera.org/account/accomplishments/verify/G1B0YF52U8ZJ" },
   ] as Certification[],
   // Internships, hackathons, leadership. Newest first.
   experience: [
