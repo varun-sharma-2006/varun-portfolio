@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
-import { caseStudy, freightAudit, otherProjects, profile, razorGrowth, type FeaturedProjectData, type Shot, type TimelineItem } from "./profile";
+import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { otherProjects, profile, projects, type FeaturedProjectData, type Shot, type TimelineItem } from "./profile";
 
 const initials = profile.name
   .split(" ")
@@ -7,12 +7,24 @@ const initials = profile.name
   .join("")
   .slice(0, 2);
 
+/** Top-bar sections, in page order. Each id must match a <section id>. */
+const SECTIONS = [
+  { id: "about", label: "About" },
+  { id: "skills", label: "Skills" },
+  { id: "projects", label: "Projects" },
+  { id: "experience", label: "Experience" },
+  { id: "education", label: "Education" },
+  { id: "contact", label: "Contact" },
+];
+
+const totalTests = projects.reduce((sum, p) => sum + (p.stats.find((s) => /test/i.test(s.label))?.value ?? 0), 0);
+
 /* ---------- Small building blocks ---------- */
 
-function Arrow() {
+function Arrow({ down = false }: { down?: boolean }) {
   return (
     <svg className="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M5 12h14M13 6l6 6-6 6" />
+      <path d={down ? "M12 5v14M6 13l6 6 6-6" : "M5 12h14M13 6l6 6-6 6"} />
     </svg>
   );
 }
@@ -25,20 +37,35 @@ function External() {
   );
 }
 
-/** Icons for the engineering cards, in the order they appear in profile.ts. */
+/** Icons for the engineering cards; each card picks one by index in profile.ts. */
 const ENG_ICON_PATHS = [
-  "M3 12h4l3-8 4 16 3-8h4", // look-ahead: signal line
-  "M4 15a4 4 0 0 1 3.5-6 5.5 5.5 0 0 1 10.6 1.5A3.5 3.5 0 0 1 18 18H7a3 3 0 0 1-3-3Z", // serverless: cloud
-  "M12 3v3M12 18v3M4.2 7.5l2.6 1.5M17.2 15l2.6 1.5M4.2 16.5l2.6-1.5M17.2 9l2.6-1.5M9 12a3 3 0 1 0 6 0 3 3 0 1 0-6 0", // AI fallback
-  "M12 3 5 6v5c0 4.4 3 8.3 7 9.5 4-1.2 7-5.1 7-9.5V6Zm-3 9 2 2 4-4", // secure sign-in: shield check
-  "M13 3 5 14h6l-1 7 8-11h-6Z", // lean: bolt
-  "M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z", // tested: check circle
+  "M3 12h4l3-8 4 16 3-8h4", // signal line
+  "M4 15a4 4 0 0 1 3.5-6 5.5 5.5 0 0 1 10.6 1.5A3.5 3.5 0 0 1 18 18H7a3 3 0 0 1-3-3Z", // cloud
+  "M12 3v3M12 18v3M4.2 7.5l2.6 1.5M17.2 15l2.6 1.5M4.2 16.5l2.6-1.5M17.2 9l2.6-1.5M9 12a3 3 0 1 0 6 0 3 3 0 1 0-6 0", // AI
+  "M12 3 5 6v5c0 4.4 3 8.3 7 9.5 4-1.2 7-5.1 7-9.5V6Zm-3 9 2 2 4-4", // shield check
+  "M13 3 5 14h6l-1 7 8-11h-6Z", // bolt
+  "M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z", // check circle
 ];
 
 function EngIcon({ index }: { index: number }) {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d={ENG_ICON_PATHS[index] ?? ENG_ICON_PATHS[5]} />
+    </svg>
+  );
+}
+
+const SOCIAL_ICONS = {
+  GitHub:
+    "M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21",
+  LinkedIn: "M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6ZM2 9h4v12H2zM4 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z",
+  Email: "M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm18 2-10 7L2 6",
+};
+
+function SocialIcon({ name }: { name: keyof typeof SOCIAL_ICONS }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={SOCIAL_ICONS[name]} />
     </svg>
   );
 }
@@ -102,10 +129,13 @@ function CountUp({ value, suffix }: { value: number; suffix: string }) {
   );
 }
 
-function SectionHead({ eyebrow, title, children }: { eyebrow: string; title: ReactNode; children?: ReactNode }) {
+function SectionHead({ index, eyebrow, title, children }: { index?: number; eyebrow: string; title: ReactNode; children?: ReactNode }) {
   return (
     <div className="section-head" data-reveal>
-      <span className="eyebrow">{eyebrow}</span>
+      <span className="eyebrow">
+        {index ? <b>{String(index).padStart(2, "0")}</b> : null}
+        {eyebrow}
+      </span>
       <h2>{title}</h2>
       {children ? <p>{children}</p> : null}
     </div>
@@ -134,28 +164,138 @@ function useReveal() {
   }, []);
 }
 
-function Timeline({ title, items }: { title: string; items: TimelineItem[] }) {
-  if (!items.length) return null;
+/** Scroll progress (0–1) and the id of the section currently under the top bar. */
+function useScrollSpy() {
+  const [state, setState] = useState({ progress: 0, active: "", scrolled: false });
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      const y = window.scrollY;
+      let active = "";
+      const line = window.innerHeight * 0.35;
+      for (const { id } of SECTIONS) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= line) active = id;
+      }
+      if (max > 0 && y >= max - 4) active = SECTIONS[SECTIONS.length - 1].id;
+      setState({ progress: max > 0 ? Math.min(y / max, 1) : 0, active, scrolled: y > 12 });
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+  return state;
+}
+
+/* ---------- Top bar ---------- */
+
+function Nav({ active, progress, scrolled }: { active: string; progress: number; scrolled: boolean }) {
+  const [open, setOpen] = useState(false);
+  const linksRef = useRef<HTMLDivElement>(null);
+  const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
+
+  // Slide the highlight pill under the active link.
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = linksRef.current?.querySelector<HTMLAnchorElement>(`a[href="#${active}"]`);
+      setPill(el ? { left: el.offsetLeft, width: el.offsetWidth } : null);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [active]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
   return (
-    <div className="timeline">
-      <h4>{title}</h4>
-      {items.map((item) => (
-        <div className="timeline-item" key={`${item.title}-${item.place}`}>
-          <span className="mono">{item.period}</span>
-          <div>
-            <strong>{item.title}</strong>
-            <span>{item.place}</span>
-            {item.details ? <p>{item.details}</p> : null}
-          </div>
+    <header className={`nav${scrolled ? " scrolled" : ""}${open ? " open" : ""}`}>
+      <div className="nav-bar">
+        <a href="#top" className="brand" onClick={() => setOpen(false)}>
+          <Logo />
+          <span>
+            {profile.name}
+            <small>{profile.role}</small>
+          </span>
+        </a>
+
+        <nav className="nav-links" ref={linksRef} aria-label="Sections">
+          {pill ? <i className="nav-pill" style={{ transform: `translateX(${pill.left}px)`, width: pill.width }} aria-hidden="true" /> : null}
+          {SECTIONS.map((s) => (
+            <a key={s.id} href={`#${s.id}`} className={active === s.id ? "active" : undefined} aria-current={active === s.id ? "true" : undefined}>
+              {s.label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="nav-actions">
+          {profile.resume ? (
+            <a className="btn btn-small" href={profile.resume} target="_blank" rel="noreferrer">
+              Résumé
+            </a>
+          ) : null}
+          <button type="button" className="menu-btn" aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} aria-controls="mobile-menu" onClick={() => setOpen((v) => !v)}>
+            <span />
+            <span />
+          </button>
         </div>
-      ))}
-    </div>
+        <span className="nav-progress" style={{ transform: `scaleX(${progress})` }} aria-hidden="true" />
+      </div>
+
+      <nav id="mobile-menu" className="mobile-menu" aria-label="Sections" hidden={!open}>
+        {SECTIONS.map((s, i) => (
+          <a key={s.id} href={`#${s.id}`} className={active === s.id ? "active" : undefined} onClick={() => setOpen(false)}>
+            <span className="mono">{String(i + 1).padStart(2, "0")}</span>
+            {s.label}
+          </a>
+        ))}
+      </nav>
+    </header>
+  );
+}
+
+function BackToTop({ progress }: { progress: number }) {
+  const r = 20;
+  const circumference = 2 * Math.PI * r;
+  return (
+    <a href="#top" className={progress > 0.06 ? "to-top show" : "to-top"} aria-label="Back to top">
+      <svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true">
+        <circle cx="24" cy="24" r={r} className="ring-bg" />
+        <circle cx="24" cy="24" r={r} className="ring" strokeDasharray={circumference} strokeDashoffset={circumference * (1 - progress)} />
+      </svg>
+      <svg className="to-top-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 19V5M6 11l6-6 6 6" />
+      </svg>
+    </a>
   );
 }
 
 /* ---------- Sections ---------- */
 
 function Hero() {
+  const socials = [
+    profile.github && { name: "GitHub" as const, href: profile.github },
+    profile.linkedin && { name: "LinkedIn" as const, href: profile.linkedin },
+    profile.email && { name: "Email" as const, href: `mailto:${profile.email}` },
+  ].filter(Boolean) as Array<{ name: keyof typeof SOCIAL_ICONS; href: string }>;
+
+  const [first, ...rest] = profile.headline.split(",");
+
   return (
     <section className="hero">
       <div className="hero-copy" data-reveal>
@@ -166,57 +306,181 @@ function Hero() {
           </span>
         ) : null}
         <p className="hello">
-          Hi, I'm <strong>{profile.name}</strong> — {profile.role.toLowerCase()}
-          {profile.location ? ` in ${profile.location}` : ""}.
+          Hi, I'm <strong>{profile.name}</strong>, a {profile.role.toLowerCase()} and CS (AI) student, Class of {profile.graduation}.
         </p>
         <h1>
-          {profile.headline.split(",")[0]}
-          {profile.headline.includes(",") ? (
+          {first}
+          {rest.length ? (
             <>
-              , <span className="grad">{profile.headline.split(",").slice(1).join(",").trim()}</span>
+              , <span className="grad">{rest.join(",").trim()}</span>
             </>
           ) : null}
         </h1>
         <p className="lead">{profile.intro}</p>
         <div className="cta-row">
-          <a className="btn btn-primary" href="#project">
-            Explore my flagship project
-            <Arrow />
+          <a className="btn btn-primary" href="#projects">
+            See my work
+            <Arrow down />
           </a>
           <a className="btn btn-glass" href="#contact">
             Get in touch
           </a>
         </div>
+        {socials.length ? (
+          <div className="socials">
+            {socials.map((s) => (
+              <a key={s.name} href={s.href} target={s.name === "Email" ? undefined : "_blank"} rel="noreferrer" aria-label={s.name} title={s.name}>
+                <SocialIcon name={s.name} />
+              </a>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       <div className="hero-visual" data-reveal>
-        <div className="device">
-          <div className="device-bar">
+        <div className="editor">
+          <div className="editor-bar">
             <span />
             <span />
             <span />
-            <em>algo-trade-mu.vercel.app</em>
+            <em>varun.ts</em>
           </div>
-          <img src={caseStudy.heroImage} alt={`${caseStudy.name} portfolio page`} />
+          <pre className="code" aria-label="A short profile written as code">
+            <code>
+              <span className="c">{"// hello, world"}</span>
+              {"\n"}
+              <span className="k">const</span> <span className="v">varun</span> = {"{"}
+              {"\n  "}
+              <span className="p">role</span>: <span className="s">"{profile.role}"</span>,{"\n  "}
+              <span className="p">studying</span>: <span className="s">"B.Tech CSE (AI)"</span>,{"\n  "}
+              <span className="p">graduating</span>: <span className="n">{profile.graduation}</span>,{"\n  "}
+              <span className="p">based</span>: <span className="s">"{profile.location.split(",")[0]}"</span>,{"\n  "}
+              <span className="p">stack</span>: [<span className="s">"Python"</span>, <span className="s">"FastAPI"</span>, <span className="s">"React"</span>, <span className="s">"TS"</span>],{"\n  "}
+              <span className="p">shipped</span>: <span className="n">{projects.length}</span>, <span className="c">{"// live, tested, measured"}</span>
+              {"\n  "}
+              <span className="p">openTo</span>: <span className="s">"Summer 2027 internships"</span>,{"\n"}
+              {"};"}
+              <span className="caret" aria-hidden="true" />
+            </code>
+          </pre>
         </div>
         <div className="float float-a">
-          <span className="mono">Backtest vs buy &amp; hold</span>
-          <strong>Honest by design</strong>
-        </div>
-        <div className="float float-c">
-          <span className="mono">Built with</span>
-          <strong>Yashika Garg</strong>
+          <span className="mono">Products live</span>
+          <strong className="grad">{projects.length} shipped</strong>
         </div>
         <div className="float float-b">
           <span className="mono">Tests passing</span>
-          <strong className="grad">107 / 107</strong>
+          <strong className="grad">{totalTests}+</strong>
+        </div>
+      </div>
+
+      <a href="#about" className="scroll-cue" aria-label="Scroll to About">
+        <span />
+      </a>
+    </section>
+  );
+}
+
+function Highlights() {
+  const items = [
+    { value: projects.length, suffix: "", label: "Products shipped live" },
+    { value: totalTests, suffix: "+", label: "Automated tests written" },
+    { value: projects.filter((p) => p.team.length === 1).length, suffix: "", label: "Built solo, end to end" },
+  ];
+  return (
+    <div className="highlights" data-reveal>
+      {items.map((item) => (
+        <div key={item.label}>
+          <strong className="grad">
+            <CountUp value={item.value} suffix={item.suffix} />
+          </strong>
+          <span>{item.label}</span>
+        </div>
+      ))}
+      <div>
+        <strong className="grad">'{profile.graduation.slice(2)}</strong>
+        <span>Graduating, B.Tech CSE (AI)</span>
+      </div>
+    </div>
+  );
+}
+
+function About() {
+  const facts = [
+    { k: "Based in", v: profile.location },
+    { k: "Studying", v: "B.Tech CSE (AI), Bennett University" },
+    { k: "Graduating", v: profile.graduation },
+    { k: "Interested in", v: profile.interests },
+  ];
+  return (
+    <section id="about" className="section">
+      <SectionHead index={1} eyebrow="About" title={<>The person behind <span className="grad">the products</span></>} />
+      <div className="about">
+        <Spotlight className="about-card">
+          <div className="about-top">
+            <Logo />
+            <div>
+              <strong>{profile.name}</strong>
+              <span>
+                {profile.role}
+                {profile.location ? ` · ${profile.location}` : ""}
+              </span>
+            </div>
+          </div>
+          {profile.about.map((p) => (
+            <p key={p.slice(0, 20)}>{p}</p>
+          ))}
+          <dl className="facts">
+            {facts.map((f) => (
+              <div key={f.k}>
+                <dt>{f.k}</dt>
+                <dd>{f.v}</dd>
+              </div>
+            ))}
+          </dl>
+        </Spotlight>
+        <div className="values">
+          {profile.values.map((v, i) => (
+            <Spotlight key={v.title} className="value-card">
+              <span className="mono">0{i + 1}</span>
+              <h3>{v.title}</h3>
+              <p>{v.body}</p>
+            </Spotlight>
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-function Gallery({ shots = caseStudy.gallery }: { shots?: Shot[] }) {
+function Skills() {
+  return (
+    <section id="skills" className="section">
+      <SectionHead index={2} eyebrow="Skills" title={<>Tools I <span className="grad">build with</span></>}>
+        Everything here is used in at least one shipped project.
+      </SectionHead>
+      <div className="skills">
+        {profile.skills.map((group, i) => (
+          <Spotlight key={group.group} className="skill-card">
+            <div className="skill-head">
+              <span className="eng-icon">
+                <EngIcon index={i} />
+              </span>
+              <h3>{group.group}</h3>
+            </div>
+            <div className="chips">
+              {group.items.map((item) => (
+                <span key={item}>{item}</span>
+              ))}
+            </div>
+          </Spotlight>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Gallery({ shots }: { shots: Shot[] }) {
   const [active, setActive] = useState(0);
   const shot = shots[active];
   return (
@@ -237,7 +501,7 @@ function Gallery({ shots = caseStudy.gallery }: { shots?: Shot[] }) {
       </div>
       <div className="stage" role="tabpanel">
         <div className="stage-frame">
-          <img key={shot.image} src={shot.image} alt={shot.title} />
+          <img key={shot.image} src={shot.image} alt={shot.title} loading="lazy" />
         </div>
         <div className="stage-caption">
           <strong>{shot.title}</strong>
@@ -248,165 +512,71 @@ function Gallery({ shots = caseStudy.gallery }: { shots?: Shot[] }) {
   );
 }
 
-function CaseStudy() {
+function ProjectCard({ p, index }: { p: FeaturedProjectData; index: number }) {
+  const live = p.links[0];
   return (
-    <section id="project" className="section">
-      <SectionHead eyebrow="Flagship project" title={<>{caseStudy.name}</>}>
-        {caseStudy.tagline}
-      </SectionHead>
-
-      <Spotlight className="overview">
-        <div className="overview-text">
-          <p>{caseStudy.summary}</p>
-          <dl>
-            <div>
-              <dt>Team</dt>
-              <dd className="team">
-                {caseStudy.team.map((member, i) => (
-                  <span key={member.name}>
-                    <a href={member.href} target="_blank" rel="noreferrer">
-                      {member.name}
-                    </a>
-                    {i < caseStudy.team.length - 1 ? <em>&amp;</em> : null}
-                  </span>
-                ))}
-              </dd>
-            </div>
-            <div>
-              <dt>What we built</dt>
-              <dd>{caseStudy.role}</dd>
-            </div>
-            <div>
-              <dt>Stack</dt>
-              <dd className="chips">
-                {caseStudy.stack.map((s) => (
-                  <span key={s}>{s}</span>
-                ))}
-              </dd>
-            </div>
-          </dl>
-          <div className="cta-row">
-            {caseStudy.links.map((link, i) => (
-              <a key={link.href} className={i === 0 ? "btn btn-primary" : "btn btn-glass"} href={link.href} target="_blank" rel="noreferrer">
-                {link.label}
-                <External />
-              </a>
-            ))}
-          </div>
+    <Spotlight className="project-card">
+      <a href={`#${p.id}`} className="project-cover" aria-label={`Read the ${p.name} case study`}>
+        <img src={p.cover} alt="" loading="lazy" />
+      </a>
+      <div className="project-body">
+        <div className="project-meta">
+          <span className="mono">0{index + 1}</span>
+          <span className="tag">{p.category}</span>
+          {p.event ? <span className="tag tag-event">{p.event}</span> : null}
         </div>
-        <div className="stats">
-          {caseStudy.stats.map((stat) => (
-            <div key={stat.label} className="stat">
-              <strong className="grad">
-                <CountUp value={stat.value} suffix={stat.suffix} />
+        <h3>{p.name}</h3>
+        <p>{p.tagline}</p>
+        <div className="project-stats">
+          {p.stats.slice(0, 3).map((s) => (
+            <div key={s.label}>
+              <strong>
+                {s.value}
+                {s.suffix}
               </strong>
-              <span>{stat.label}</span>
+              <span>{s.label}</span>
             </div>
           ))}
         </div>
-      </Spotlight>
-
-      <div className="story">
-        {caseStudy.story.map((step, index) => (
-          <Spotlight key={step.title} className="story-card">
-            <span className="mono step">0{index + 1}</span>
-            <span className="eyebrow">{step.kicker}</span>
-            <h3>{step.title}</h3>
-            <p>{step.body}</p>
-          </Spotlight>
-        ))}
+        <div className="project-actions">
+          <a className="btn btn-glass btn-small-glass" href={`#${p.id}`}>
+            Case study
+            <Arrow down />
+          </a>
+          {live ? (
+            <a className="link" href={live.href} target="_blank" rel="noreferrer">
+              Live demo <External />
+            </a>
+          ) : null}
+        </div>
       </div>
-    </section>
+    </Spotlight>
   );
 }
 
-function Features() {
+/** A full project case study (overview, stats, story, video, gallery, engineering). Data lives in profile.ts. */
+function CaseStudy({ p, index }: { p: FeaturedProjectData; index: number }) {
+  const solo = p.team.length === 1;
   return (
-    <section id="features" className="section">
-      <SectionHead eyebrow="What it does" title={<>Everything a trader needs to <span className="grad">test an idea</span></>} />
-      <div className="bento">
-        {caseStudy.features.map((feature) => (
-          <Spotlight key={feature.title} className={`bento-card ${feature.size}`}>
-            <div className="bento-text">
-              <h3>{feature.title}</h3>
-              <p>{feature.body}</p>
-            </div>
-            <div className="bento-shot">
-              <img src={feature.image} alt={feature.title} loading="lazy" />
-            </div>
-          </Spotlight>
-        ))}
+    <article id={p.id} className="case">
+      <div className="case-head" data-reveal>
+        <span className="case-num grad">0{index + 1}</span>
+        <div>
+          <span className="eyebrow">
+            Case study · {p.category}
+            {p.event ? ` · ${p.event}` : ""}
+          </span>
+          <h3>{p.name}</h3>
+          <p>{p.tagline}</p>
+        </div>
       </div>
-    </section>
-  );
-}
-
-function Screens() {
-  return (
-    <section id="screens" className="section">
-      <SectionHead eyebrow="Take the tour" title="Inside the app">
-        Watch a two-minute walkthrough, or pick a screen.
-      </SectionHead>
-      <div className="demo-video" data-reveal>
-        <video controls preload="none" poster={caseStudy.video.poster} playsInline>
-          <source src={caseStudy.video.src} type="video/mp4" />
-        </video>
-        <span className="mono">Product demo · {caseStudy.video.length}</span>
-      </div>
-      <Gallery />
-    </section>
-  );
-}
-
-function Engineering() {
-  return (
-    <section id="engineering" className="section">
-      <SectionHead eyebrow="Under the hood" title={<>Built like a <span className="grad">real product</span></>}>
-        The parts you don't see are where most of the work went.
-      </SectionHead>
-      <div className="arch" data-reveal>
-        {caseStudy.architecture.map((layer, index) => (
-          <div key={layer.layer} className="arch-layer">
-            <span className="mono">{String(index + 1).padStart(2, "0")}</span>
-            <strong>{layer.layer}</strong>
-            <ul>
-              {layer.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            {index < caseStudy.architecture.length - 1 ? <i className="arch-link" aria-hidden="true" /> : null}
-          </div>
-        ))}
-      </div>
-      <div className="eng-grid">
-        {caseStudy.engineering.map((item) => (
-          <Spotlight key={item.title} className="eng-card">
-            <span className="eng-icon">
-              <EngIcon index={caseStudy.engineering.indexOf(item)} />
-            </span>
-            <h3>{item.title}</h3>
-            <p>{item.body}</p>
-          </Spotlight>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/** A featured project section (overview, stats, story, gallery, engineering). Data lives in profile.ts. */
-function FeaturedProject({ id, eyebrow, p }: { id: string; eyebrow: string; p: FeaturedProjectData }) {
-  return (
-    <section id={id} className="section">
-      <SectionHead eyebrow={eyebrow} title={<>{p.name}</>}>
-        {p.tagline}
-      </SectionHead>
 
       <Spotlight className="overview">
         <div className="overview-text">
           <p>{p.summary}</p>
           <dl>
             <div>
-              <dt>Built by</dt>
+              <dt>{solo ? "Built by" : "Team"}</dt>
               <dd className="team">
                 {p.team.map((member, i) => (
                   <span key={member.name}>
@@ -419,7 +589,7 @@ function FeaturedProject({ id, eyebrow, p }: { id: string; eyebrow: string; p: F
               </dd>
             </div>
             <div>
-              <dt>What I built</dt>
+              <dt>{solo ? "What I built" : "What we built"}</dt>
               <dd>{p.role}</dd>
             </div>
             <div>
@@ -453,15 +623,24 @@ function FeaturedProject({ id, eyebrow, p }: { id: string; eyebrow: string; p: F
       </Spotlight>
 
       <div className="story">
-        {p.story.map((step, index) => (
+        {p.story.map((step, i) => (
           <Spotlight key={step.title} className="story-card">
-            <span className="mono step">0{index + 1}</span>
+            <span className="mono step">0{i + 1}</span>
             <span className="eyebrow">{step.kicker}</span>
-            <h3>{step.title}</h3>
+            <h4>{step.title}</h4>
             <p>{step.body}</p>
           </Spotlight>
         ))}
       </div>
+
+      {p.video ? (
+        <div className="demo-video" data-reveal>
+          <video controls preload="none" poster={p.video.poster} playsInline>
+            <source src={p.video.src} type="video/mp4" />
+          </video>
+          <span className="mono">Product demo · {p.video.length}</span>
+        </div>
+      ) : null}
 
       <Gallery shots={p.gallery} />
 
@@ -471,56 +650,37 @@ function FeaturedProject({ id, eyebrow, p }: { id: string; eyebrow: string; p: F
             <span className="eng-icon">
               <EngIcon index={item.icon} />
             </span>
-            <h3>{item.title}</h3>
+            <h4>{item.title}</h4>
             <p>{item.body}</p>
           </Spotlight>
         ))}
       </div>
-    </section>
+    </article>
   );
 }
 
-function About() {
-  const shown = otherProjects.filter((p) => p.show);
+function Projects() {
+  const more = otherProjects.filter((p) => p.show);
   return (
-    <section id="about" className="section">
-      <SectionHead eyebrow="About me" title="A bit about me" />
-      <div className="about">
-        <Spotlight className="about-card">
-          <div className="about-top">
-            <Logo />
-            <div>
-              <strong>{profile.name}</strong>
-              <span>
-                {profile.role}
-                {profile.location ? ` · ${profile.location}` : ""}
-              </span>
-            </div>
-          </div>
-          {profile.about.map((p) => (
-            <p key={p.slice(0, 20)}>{p}</p>
-          ))}
-          <Timeline title="Education" items={profile.education} />
-          <Timeline title="Experience" items={profile.experience} />
-        </Spotlight>
-        <div className="skills">
-          {profile.skills.map((group) => (
-            <Spotlight key={group.group} className="skill-card">
-              <span className="mono">{group.group}</span>
-              <div className="chips">
-                {group.items.map((item) => (
-                  <span key={item}>{item}</span>
-                ))}
-              </div>
-            </Spotlight>
-          ))}
-        </div>
+    <section id="projects" className="section">
+      <SectionHead index={3} eyebrow="Projects" title={<>Selected <span className="grad">work</span></>}>
+        Three products, each live with real users in mind, automated tests and an honest evaluation. Pick one to read the full case study.
+      </SectionHead>
+      <div className="project-grid">
+        {projects.map((p, i) => (
+          <ProjectCard key={p.id} p={p} index={i} />
+        ))}
       </div>
-      {shown.length ? (
+
+      {projects.map((p, i) => (
+        <CaseStudy key={p.id} p={p} index={i} />
+      ))}
+
+      {more.length ? (
         <div className="more" data-reveal>
-          <span className="eyebrow">More work</span>
+          <span className="eyebrow">More on GitHub</span>
           <div className="more-list">
-            {shown.map((p) => (
+            {more.map((p) => (
               <a key={p.href} href={p.href} target="_blank" rel="noreferrer">
                 <strong>{p.name}</strong>
                 <span>{p.tagline}</span>
@@ -537,6 +697,77 @@ function About() {
           </a>
         </p>
       )}
+    </section>
+  );
+}
+
+function Timeline({ items }: { items: TimelineItem[] }) {
+  return (
+    <ol className="timeline">
+      {items.map((item) => (
+        <li key={`${item.title}-${item.place}`} data-reveal>
+          <span className="dot" aria-hidden="true" />
+          <span className="mono when">{item.period}</span>
+          <div className="timeline-card">
+            <strong>{item.title}</strong>
+            <span className="where">{item.place}</span>
+            {item.details ? <p>{item.details}</p> : null}
+            {item.tags?.length ? (
+              <div className="chips">
+                {item.tags.map((t) => (
+                  <span key={t}>{t}</span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function Experience() {
+  if (!profile.experience.length) return null;
+  return (
+    <section id="experience" className="section">
+      <SectionHead index={4} eyebrow="Experience" title={<>Hackathons &amp; <span className="grad">leadership</span></>} />
+      <Timeline items={profile.experience} />
+    </section>
+  );
+}
+
+function Education() {
+  if (!profile.education.length) return null;
+  return (
+    <section id="education" className="section">
+      <SectionHead index={5} eyebrow="Education" title={<>Where I'm <span className="grad">learning</span></>} />
+      <div className="edu">
+        {profile.education.map((e) => (
+          <Spotlight key={e.title} className="edu-card">
+            <div className="edu-top">
+              <span className="edu-icon" aria-hidden="true">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 10 12 5 2 10l10 5 10-5ZM6 12v5c3 2 9 2 12 0v-5" />
+                </svg>
+              </span>
+              <span className="badge badge-soft">{e.period}</span>
+            </div>
+            <h3>{e.title}</h3>
+            <span className="where">{e.place}</span>
+            {e.details ? <p>{e.details}</p> : null}
+            {e.tags?.length ? (
+              <>
+                <span className="mono">Coursework</span>
+                <div className="chips">
+                  {e.tags.map((t) => (
+                    <span key={t}>{t}</span>
+                  ))}
+                </div>
+              </>
+            ) : null}
+          </Spotlight>
+        ))}
+      </div>
     </section>
   );
 }
@@ -563,11 +794,16 @@ function Contact() {
     <section id="contact" className="section">
       <div className="contact" data-reveal>
         <div className="contact-glow" aria-hidden="true" />
-        <span className="eyebrow">Contact</span>
+        <span className="eyebrow">
+          <b>06</b>Contact
+        </span>
         <h2>
           Let's build something <span className="grad">great together.</span>
         </h2>
-        <p>{profile.lookingFor ? `${profile.lookingFor}. ` : ""}I reply to every email, usually within a day.</p>
+        <p>
+          {profile.lookingFor ? `${profile.lookingFor} in ${profile.interests.toLowerCase().replace(/ · /g, ", ")}. ` : ""}I reply to every email,
+          usually within a day.
+        </p>
         <div className="cta-row center">
           <a className="btn btn-primary" href={`mailto:${profile.email}`}>
             Email me
@@ -594,16 +830,13 @@ function Contact() {
 
 export default function App() {
   useReveal();
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const { progress, active, scrolled } = useScrollSpy();
 
   return (
     <>
+      <a className="skip" href="#about">
+        Skip to content
+      </a>
       <div className="aurora" aria-hidden="true">
         <span className="blob b1" />
         <span className="blob b2" />
@@ -611,40 +844,36 @@ export default function App() {
       </div>
       <div className="grid-bg" aria-hidden="true" />
 
-      <header className={scrolled ? "nav scrolled" : "nav"}>
-        <a href="#top" className="brand">
-          <Logo />
-          <span>{profile.name}</span>
-        </a>
-        <nav>
-          <a href="#project">Algo Trade</a>
-          <a href="#freight">Freight Audit</a>
-          <a href="#razorgrowth">RazorGrowth</a>
-          <a href="#about">About</a>
-        </nav>
-        <a className="btn btn-small" href="#contact">
-          Contact
-        </a>
-      </header>
+      <Nav active={active} progress={progress} scrolled={scrolled} />
 
       <main id="top">
         <Hero />
-        <CaseStudy />
-        <Features />
-        <Screens />
-        <Engineering />
-        <FeaturedProject id="freight" eyebrow="Second project · Applied AI" p={freightAudit} />
-        <FeaturedProject id="razorgrowth" eyebrow={`Third project · ${razorGrowth.event}`} p={razorGrowth} />
+        <Highlights />
         <About />
+        <Skills />
+        <Projects />
+        <Experience />
+        <Education />
         <Contact />
       </main>
 
       <footer className="footer">
-        <span>
-          © {new Date().getFullYear()} {profile.name}
-        </span>
-        <a href="#top">Back to top ↑</a>
+        <div className="footer-brand">
+          <Logo />
+          <span>
+            © {new Date().getFullYear()} {profile.name}
+          </span>
+        </div>
+        <nav aria-label="Footer">
+          {SECTIONS.map((s) => (
+            <a key={s.id} href={`#${s.id}`}>
+              {s.label}
+            </a>
+          ))}
+        </nav>
       </footer>
+
+      <BackToTop progress={progress} />
     </>
   );
 }

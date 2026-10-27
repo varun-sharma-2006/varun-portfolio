@@ -13,6 +13,7 @@ export interface TimelineItem {
   place: string;
   period: string;
   details?: string;
+  tags?: string[];
 }
 
 export interface Shot {
@@ -27,7 +28,9 @@ export const profile = {
   name: "Varun Sharma",
   role: "Full-stack developer",
   location: "Greater Noida, India",
-  lookingFor: "Open to software engineering & fintech internships",
+  graduation: "2028",
+  lookingFor: "Open to Summer 2027 internships",
+  interests: "Software engineering · Applied AI · Fintech",
   email: "varunsharma42006@gmail.com",
   github: "https://github.com/varun-sharma-2006",
   linkedin: "https://www.linkedin.com/in/varunsh0040",
@@ -35,19 +38,27 @@ export const profile = {
 
   headline: "I build products that ship, end to end.",
   intro:
-    "Full-stack developer working across Python, FastAPI, React and TypeScript. I design the data model, build the " +
-    "API, craft the interface, and ship it with tests, CI and a live deployment.",
+    "I'm a Computer Science (AI) student at Bennett University, graduating in 2028. I work across Python, FastAPI, " +
+    "React and TypeScript: I design the data model, build the API, craft the interface, and ship it with tests, CI " +
+    "and a live deployment.",
 
   about: [
     "I enjoy the whole life of a product: turning a vague idea into a data model, an API, an interface people like " +
       "using, and a deployment that stays up.",
-    "Right now I'm most interested in fintech and applied AI, and in software that is honest about its results.",
+    "Right now I'm most interested in fintech and applied AI, and in software that is honest about its results. " +
+      "Each project below is live, tested and measured, including the numbers that didn't flatter it.",
+  ],
+
+  values: [
+    { title: "End-to-end ownership", body: "From the schema and API to the interface, CI and deployment. I like owning the whole thing." },
+    { title: "Honest results", body: "Out-of-sample tests, baselines and ablations, so the numbers mean something." },
+    { title: "AI with guardrails", body: "LLMs do what they're good at; deterministic code and people make the decisions that matter." },
   ],
 
   skills: [
     { group: "Languages", items: ["Python", "C++", "TypeScript", "JavaScript"] },
     { group: "Backend", items: ["FastAPI", "REST APIs", "MongoDB", "SQLAlchemy & Alembic", "Pydantic"] },
-    { group: "Frontend", items: ["React", "Vite", "CSS & design systems", "Responsive UI"] },
+    { group: "Frontend", items: ["React", "Vite", "Tailwind CSS", "CSS & design systems", "Responsive UI"] },
     { group: "AI & ML", items: ["Machine learning", "Scikit-learn", "Pandas", "NumPy", "Gemini function calling", "AI agents with guardrails"] },
     { group: "Quant", items: ["Backtesting", "Risk analytics", "Walk-forward testing", "Time-series analysis"] },
     { group: "Engineering", items: ["pytest & Vitest", "GitHub Actions CI", "Vercel", "Docker", "Google OAuth"] },
@@ -57,31 +68,59 @@ export const profile = {
     {
       title: "B.Tech, Computer Science & Engineering (Artificial Intelligence)",
       place: "Bennett University, Greater Noida",
-      period: "Class of 2028",
-      details: "Coursework: Data Structures & Algorithms, Artificial Intelligence, Machine Learning, Linear Algebra, OOP",
+      period: "2024 – 2028",
+      details: "Expected graduation: 2028",
+      tags: ["Data Structures & Algorithms", "Artificial Intelligence", "Machine Learning", "Linear Algebra", "OOP"],
     },
   ] as TimelineItem[],
-  // Internships, hackathons, leadership.
+  // Internships, hackathons, leadership. Newest first.
   experience: [
+    {
+      title: "Solo participant",
+      place: "Razorpay AI Buildathon 2026",
+      period: "2026",
+      details: "Built RazorGrowth on my own: a permissioned AI agent that recovers failed payments.",
+    },
     { title: "Management Lead", place: "Sportikon 3.0", period: "2025" },
     { title: "Peer Mentor", place: "DSA Summit", period: "2025" },
   ] as TimelineItem[],
 };
 
-/** The featured case study. */
-export const caseStudy = {
+/** Shape shared by every project case study. */
+export interface FeaturedProjectData {
+  id: string; // anchor on the page
+  name: string;
+  category: string;
+  tagline: string;
+  summary: string;
+  event?: string;
+  cover: string; // card image in the projects overview
+  links: Link[];
+  role: string;
+  team: { name: string; href: string }[];
+  stack: string[];
+  stats: { value: number; suffix: string; label: string }[];
+  story: { kicker: string; title: string; body: string }[];
+  video?: { src: string; poster: string; length: string };
+  gallery: Shot[];
+  engineering: { icon: number; title: string; body: string }[];
+}
+
+export const algoTrade: FeaturedProjectData = {
+  id: "algo-trade",
   name: "Algo Trade Simulator",
+  category: "Fintech",
   tagline: "A trading lab that tells you the truth about your strategy.",
   summary:
     "Backtest trading strategies on real market data with fees and slippage, compare every result with buy & hold " +
     "and the S&P 500 on return and risk, check whether tuned settings survive with walk-forward testing, try a " +
     "machine-learning strategy trained only on the past, design your own rules, run backdated paper portfolios, " +
     "and ask an AI copilot that runs all of it for you.",
+  cover: "/algotrade/dashboard.png",
   links: [
     { label: "Open live demo", href: "https://algo-trade-mu.vercel.app" },
     { label: "View source", href: "https://github.com/varun-sharma-2006/AlgoTrade" },
-  ] satisfies Link[],
-  heroImage: "/algotrade/portfolio.png",
+  ],
   role: "Design, backend, frontend and deployment",
   team: [
     { name: "Varun Sharma", href: "https://github.com/varun-sharma-2006" },
@@ -122,57 +161,6 @@ export const caseStudy = {
     },
   ],
 
-  features: [
-    {
-      title: "Risk analytics",
-      body: "Return, volatility, Sharpe, Sortino, drawdown and Calmar for the strategy, buy & hold and the S&P 500 side by side, with growth and drawdown charts.",
-      image: "/algotrade/strategy-lab.png",
-      size: "wide",
-    },
-    {
-      title: "Walk-forward testing",
-      body: "Tune on each past year, trade the best settings on the next quarter they've never seen, and roll forward. The gap between tuned and out-of-sample returns is curve fitting, made visible.",
-      image: "/algotrade/walk-forward.png",
-      size: "tall",
-    },
-    {
-      title: "Machine-learning strategy",
-      body: "Logistic regression on 8 price features, retrained monthly on past data only, with accuracy vs a baseline, ROC-AUC and feature weights.",
-      image: "/algotrade/ml-strategy.png",
-      size: "normal",
-    },
-    {
-      title: "Copilot that runs backtests",
-      body: "Gemini function calling runs the real backtester, strategy comparisons and walk-forward tests, then explains the numbers.",
-      image: "/algotrade/copilot-actions.png",
-      size: "normal",
-    },
-    {
-      title: "Strategy Builder",
-      body: "Combine price, SMA, EMA and RSI rules with crossovers, stop-loss and take-profit. Read it back in plain English, backtest, save.",
-      image: "/algotrade/builder.png",
-      size: "wide",
-    },
-    {
-      title: "Paper portfolio",
-      body: "Backdate simulations up to a year. Each is replayed on real prices with its strategy's rules to show live P&L.",
-      image: "/algotrade/portfolio.png",
-      size: "normal",
-    },
-    {
-      title: "Live markets",
-      body: "Quotes and candlestick charts for any stock, index or crypto.",
-      image: "/algotrade/live-data.png",
-      size: "normal",
-    },
-    {
-      title: "Sign in with Google",
-      body: "Tokens verified on the server, private workspaces, and an admin dashboard of visitors.",
-      image: "/algotrade/login.png",
-      size: "wide",
-    },
-  ],
-
   video: { src: "/algotrade/demo.mp4", poster: "/algotrade/demo-poster.png", length: "2 min" },
 
   gallery: [
@@ -184,50 +172,30 @@ export const caseStudy = {
     { id: "builder", label: "Builder", title: "Strategy Builder", caption: "Design rules, see them in plain English, backtest on 2 years of data and save.", image: "/algotrade/builder.png" },
     { id: "copilot", label: "Copilot", title: "AI copilot with actions", caption: "Ask it to compare strategies and it runs the backtests, then explains the results.", image: "/algotrade/copilot-actions.png" },
     { id: "markets", label: "Markets", title: "Live markets", caption: "Search any ticker and study its candles across ranges.", image: "/algotrade/live-data.png" },
-  ] satisfies Shot[],
-
-  architecture: [
-    { layer: "Interface", items: ["React + TypeScript", "Custom design system", "Hand-built SVG charts"] },
-    { layer: "API", items: ["FastAPI routers", "Pydantic validation", "Google ID-token checks"] },
-    { layer: "Engine", items: ["Backtester & risk metrics", "Walk-forward & ML model", "Rule engine & portfolio"] },
-    { layer: "Data & AI", items: ["Yahoo Finance", "MongoDB Atlas", "Gemini function calling"] },
   ],
 
   engineering: [
-    { title: "No look-ahead bias", body: "Signals use only data up to each close; the ML model trains only on labels already known. Tests prove it." },
-    { title: "Walk-forward testing", body: "Every quarter re-tunes on the past year and trades unseen data, exposing curve fitting." },
-    { title: "Copilot with real actions", body: "Gemini calls the backtester through function calling, with memoised tools and an offline fallback." },
-    { title: "Works on serverless", body: "Signed sessions and per-loop database clients survive Vercel's parallel instances." },
-    { title: "Lean deployment", body: "Direct market-data calls and an ML model in plain Python keep the server bundle ~5× smaller." },
-    { title: "Tested and automated", body: "107 tests across backend and frontend run on every push via GitHub Actions." },
+    { icon: 0, title: "No look-ahead bias", body: "Signals use only data up to each close; the ML model trains only on labels already known. Tests prove it." },
+    { icon: 3, title: "Walk-forward testing", body: "Every quarter re-tunes on the past year and trades unseen data, exposing curve fitting." },
+    { icon: 2, title: "Copilot with real actions", body: "Gemini calls the backtester through function calling, with memoised tools and an offline fallback." },
+    { icon: 1, title: "Works on serverless", body: "Signed sessions and per-loop database clients survive Vercel's parallel instances." },
+    { icon: 4, title: "Lean deployment", body: "Direct market-data calls and an ML model in plain Python keep the server bundle ~5× smaller." },
+    { icon: 5, title: "Tested and automated", body: "107 tests across backend and frontend run on every push via GitHub Actions." },
   ],
 };
 
-/** Shape shared by the featured-project sections below. */
-export interface FeaturedProjectData {
-  name: string;
-  tagline: string;
-  summary: string;
-  event?: string;
-  links: Link[];
-  role: string;
-  team: { name: string; href: string }[];
-  stack: string[];
-  stats: { value: number; suffix: string; label: string }[];
-  story: { kicker: string; title: string; body: string }[];
-  gallery: Shot[];
-  engineering: { icon: number; title: string; body: string }[];
-}
-
 /** Freight Invoice Auditor. Numbers come from the project's eval harness (fresh held-out test split). */
 export const freightAudit: FeaturedProjectData = {
+  id: "freight-audit",
   name: "Freight Invoice Auditor",
+  category: "Applied AI",
   tagline: "An AI auditor that catches carrier overcharges, and proves every claim before a person sends it.",
   summary:
     "Carriers bill shippers with invoices full of line items, and they often don't match the contract. This agent " +
     "reads a carrier's invoice PDF, checks every line against the contracted rate sheet, flags overcharges with the " +
     "exact contract clause and invoice line as evidence, and drafts a dispute that a signed-in reviewer must approve " +
     "before anything is sent.",
+  cover: "/freight/dashboard.png",
   links: [
     { label: "Open live demo", href: "https://freight-invoice-auditing-agent.vercel.app" },
     { label: "View source", href: "https://github.com/varun-sharma-2006/Freight-Invoice-Auditing-Agent" },
@@ -290,9 +258,10 @@ export const freightAudit: FeaturedProjectData = {
   ],
 };
 
-/** The third featured project. */
-export const razorGrowth = {
+export const razorGrowth: FeaturedProjectData = {
+  id: "razorgrowth",
   name: "RazorGrowth",
+  category: "AI agents · Payments",
   tagline: "An AI agent that wins back failed payments, without ever holding the purse strings.",
   summary:
     "Failed payments quietly cost merchants revenue. RazorGrowth is an AI agent that investigates them with read-only tools and proposes " +
@@ -300,10 +269,11 @@ export const razorGrowth = {
     "policy engine and needs the merchant's explicit approval, and every step is audited. To let anyone try it, " +
     "it ships as a live simulator: run a store for a week, command the agent, and compete on a weekly leaderboard.",
   event: "Razorpay AI Buildathon 2026",
+  cover: "/razorgrowth/dashboard.png",
   links: [
     { label: "Open live demo", href: "https://razorgrowth.vercel.app" },
     { label: "View source", href: "https://github.com/varun-sharma-2006/Razorgrowth" },
-  ] satisfies Link[],
+  ],
   role: "Everything: agent, policy engine, simulator, interface and deployment",
   team: [{ name: "Varun Sharma", href: "https://github.com/varun-sharma-2006" }],
   stack: ["Python", "FastAPI", "Gemini API", "SQLAlchemy", "Alembic", "React", "TypeScript", "Razorpay API", "Google sign-in", "Vercel", "FastAPI Cloud"],
@@ -351,7 +321,7 @@ export const razorGrowth = {
     { id: "campaigns", label: "Campaigns", title: "Recovery links", caption: "One Razorpay Payment Link per failed payment, each with its share of the incentive and its outcome.", image: "/razorgrowth/campaigns.png" },
     { id: "lab", label: "Safety lab", title: "Fault injection", caption: "Policy block, gateway timeouts with safe halt, and a lost response recovered without a duplicate link.", image: "/razorgrowth/safety-lab.png" },
     { id: "results", label: "Results", title: "End of the week", caption: "The score breakdown, return on incentive, and a submission to the weekly leaderboard.", image: "/razorgrowth/results.png" },
-  ] satisfies Shot[],
+  ],
 
   engineering: [
     { icon: 3, title: "Deterministic guardrails", body: "A policy engine checks every proposal against the safety cap and incentive wallet, at proposal time and again at approval." },
@@ -363,13 +333,14 @@ export const razorGrowth = {
   ],
 };
 
+/** Projects in the order they appear on the page. */
+export const projects: FeaturedProjectData[] = [algoTrade, freightAudit, razorGrowth];
+
 /**
  * Other GitHub projects, hidden until they get their own case study.
- * Set `show: true` on a project to list it in the "More work" section.
+ * Set `show: true` on a project to list it under "More on GitHub".
  */
 export const otherProjects = [
-  // RazorGrowth is featured as its own section (see `razorGrowth` above).
-  { name: "RazorGrowth", tagline: "Permissioned AI revenue-recovery agent (Razorpay AI Buildathon 2026)", href: "https://github.com/varun-sharma-2006/Razorgrowth", show: false },
   { name: "AgriGuard", tagline: "Multi-modal crop disease detection", href: "https://github.com/varun-sharma-2006/Agriguard", show: false },
   { name: "Vedave", tagline: "Luxury fashion rental, buy & sell marketplace", href: "https://github.com/varun-sharma-2006/Vedave", show: false },
 ];
