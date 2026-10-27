@@ -18,6 +18,7 @@ const SECTIONS = [
   { id: "now", label: "Now" },
   { id: "experience", label: "Experience" },
   { id: "education", label: "Education" },
+  { id: "certifications", label: "Certifications" },
   { id: "contact", label: "Contact" },
 ];
 
@@ -564,7 +565,6 @@ function CommandPalette({ open, onClose, onAsk }: { open: boolean; onClose: () =
       { group: "Links", label: "GitHub", hint: "github.com", run: () => window.open(profile.github, "_blank", "noopener") },
       { group: "Links", label: "LinkedIn", hint: "linkedin.com", run: () => window.open(profile.linkedin, "_blank", "noopener") },
       ...SECTIONS.map((s) => ({ group: "Sections", label: s.label, hint: `0${sectionNumber(s.id)}`, run: () => scrollToSection(s.id) })),
-      { group: "Sections", label: "Certifications", hint: `${profile.certifications.length} certificates`, run: () => scrollToSection("certifications") },
       ...projects.flatMap((p) => [
         { group: "Projects", label: p.name, hint: p.category, run: () => scrollToSection(p.id) },
         ...p.links.map((l) => ({
@@ -1493,7 +1493,7 @@ function Education() {
   if (!profile.education.length) return null;
   return (
     <section id="education" className="section">
-      <SectionHead index={sectionNumber("education")} eyebrow="Education & certifications" title={<>Where I'm <span className="grad">learning</span></>} />
+      <SectionHead index={sectionNumber("education")} eyebrow="Education" title={<>Where I'm <span className="grad">learning</span></>} />
       <div className="edu">
         {profile.education.map((e) => (
           <Spotlight key={e.title} className="edu-card">
@@ -1521,7 +1521,6 @@ function Education() {
           </Spotlight>
         ))}
       </div>
-      <Certifications />
     </section>
   );
 }
@@ -1540,11 +1539,10 @@ function Certifications() {
     .map((kind) => ({ kind, items: certs.filter((c) => c.kind === kind) }))
     .filter((g) => g.items.length);
   return (
-    <div id="certifications" className="certs">
-      <div className="certs-head" data-reveal>
-        <h3>Certifications</h3>
-        <span className="mono">{certs.length} certificates · click any to open</span>
-      </div>
+    <section id="certifications" className="section">
+      <SectionHead index={sectionNumber("certifications")} eyebrow="Certifications" title={<>Skills, <span className="grad">certified</span></>}>
+        {certs.length} certificates from HackerRank and Coursera. Click any to see it.
+      </SectionHead>
       {groups.map((g) => (
         <div key={g.kind} className="cert-group">
           <span className="mono cert-group-title">{g.kind === "Skill test" ? "Skill certifications" : "Courses"}</span>
@@ -1569,7 +1567,7 @@ function Certifications() {
           </div>
         </div>
       ))}
-    </div>
+    </section>
   );
 }
 
@@ -1680,6 +1678,7 @@ export default function App() {
         <Now />
         <Experience />
         <Education />
+        <Certifications />
         <Contact />
       </main>
 

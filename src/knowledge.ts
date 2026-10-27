@@ -37,7 +37,7 @@ export const passages: Passage[] = [
       .join(" "),
   },
   {
-    id: "education",
+    id: "certifications",
     title: "Certifications",
     text:
       "Certificates and certifications: " +
@@ -87,6 +87,7 @@ export const sources: Record<string, string> = {
   skills: "Skills",
   experience: "Experience",
   education: "Education",
+  certifications: "Certifications",
   contact: "Contact",
   ...Object.fromEntries(projects.map((p) => [p.id, p.name])),
 };

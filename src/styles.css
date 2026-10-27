@@ -1889,25 +1889,8 @@ main {
 
 /* ---------- Certifications ---------- */
 
-.certs {
-  margin-top: clamp(2.5rem, 5vw, 3.5rem);
-  scroll-margin-top: var(--nav-h);
-}
-
-.certs-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.5rem 1rem;
-}
-
-.certs-head h3 {
-  font-size: clamp(1.4rem, 2.6vw, 1.8rem);
-}
-
-.cert-group {
-  margin-top: 1.5rem;
+.cert-group + .cert-group {
+  margin-top: 1.75rem;
 }
 
 .cert-group-title {
@@ -2172,6 +2155,23 @@ main {
   font: inherit;
   cursor: pointer;
   transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.kbd-btn kbd {
+  white-space: nowrap;
+}
+
+/* With eight links in the bar, the search button shrinks to just its icon on narrower screens. */
+@media (max-width: 1320px) {
+  .kbd-btn kbd {
+    display: none;
+  }
+
+  .kbd-btn {
+    width: 38px;
+    padding: 0;
+    justify-content: center;
+  }
 }
 
 .kbd-btn:hover {
