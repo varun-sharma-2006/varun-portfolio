@@ -49,7 +49,8 @@ export const profile = {
       "Each project below is live, tested and measured, including the numbers that didn't flatter it.",
   ],
 
-  // "Now": what I'm up to lately. Keep it current.
+  // "Now": what I'm up to lately. Change nowUpdated whenever you edit the list.
+  nowUpdated: "October 2026",
   now: [
     { label: "Latest ship", text: "BidPulse, a real-time British-auction RFQ platform (Oct 2026)" },
     { label: "Exploring", text: "AI agents with deterministic guardrails and honest evaluation" },

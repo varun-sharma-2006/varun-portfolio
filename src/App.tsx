@@ -1390,7 +1390,7 @@ function Now() {
         <Spotlight className="now-card">
           <span className="badge">
             <i />
-            Updated {new Date().toLocaleString("en", { month: "long", year: "numeric" })}
+            Updated {profile.nowUpdated}
           </span>
           <ul className="now-list">
             {profile.now.map((n) => (
